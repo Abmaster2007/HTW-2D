@@ -1,0 +1,22 @@
+html {
+    background-color: black;
+}
+
+@font-face {
+    font-family: 'VCR OSD Mono';
+    font-style: normal;
+    src: url('fonts/VCR_OSD_MONO_1.001.ttf') format('truetype');
+}
+
+body {
+    color: white;
+    font-family: 'VCR OSD Mono', monospace;
+}
+
+#pageTitle {
+    text-align: center;
+}
+
+canvas {
+    display: none
+}
