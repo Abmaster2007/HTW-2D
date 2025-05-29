@@ -2,14 +2,14 @@
 
 # Main menu
 
-* [ ] 1: The menu should have a play button that lets the player start the game if they have an account. 
-* [ ] 2: The menu should have a login button under that leads to the login page.
-* [ ] 3: The menu should have a signup button under that takes the user to the signup page.
+* [X] ~~*1: The menu should have a play button that lets the player start the game if they have an account.*~~ [2025-05-29] 
+* [X] ~~*2: The menu should have a login button under that leads to the login page.*~~ [2025-05-29]
+* [X] ~~*3: The menu should have a signup button under that takes the user to the signup page.*~~ [2025-05-29]
 * [ ] 4: The menu should have a leaderboard on the left that displays the "user:difficulty:time" from either descending/ascending order for time and sorted by a single difficulty.
 * [ ] 5: The menu should have a background around the menu that plays the animation of the main character getting chased by the wumpus.
 * [ ] 6: In the bottom left of the main menu, there should be a text that says "Logged in: {user}" when logged in or signed up that should be boxed in.
-* [ ] 7: The menu should be centered in the middle of the screen that is enclosed in a box.
-* [ ] 8: The menu should have a difficulty button between the login and play button that modifies the behaviour of the enemies and the main character, ranged from Easy, Normal, and Hard.
+* [X] ~~*7: The menu should be centered in the middle of the screen that is enclosed in a box.*~~ [2025-05-29]
+* [X] ~~*8: The menu should have a difficulty button between the login and play button that modifies the behaviour of the enemies and the main character, ranged from Easy, Normal, and Hard.*~~ [2025-05-29]
 
 # 1. The game
 * [ ] 1.1: If the user is logged in, start the game. Else, tell the player that they do not have an account signed in and lead the player to the login page.
