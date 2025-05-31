@@ -35,10 +35,12 @@ canvas {
 }
 
 #gameMenu {
-    display: grid;
-    padding: 50px;
+    display: flex;
+    flex-direction: row;
     justify-content: center;
-    align-items: center;
+    align-items: flex-start;
+    gap: 8vw; /* space between menu and leaderboard */
+    padding: 50px;
     border-style: solid;
 }
 
@@ -52,6 +54,7 @@ canvas {
     padding: 10px 20px;
     font-size: 20px;
     cursor: pointer;
+    gap: 10px;
 }
 
 #gameMenu button:hover {
@@ -65,8 +68,6 @@ canvas {
 }
 
 #leaderBoard {
-    display: grid;
-    margin-right: 100px;
     width: 200px;
     padding: 10px;
     background-color: rgb(18, 14, 14);
@@ -74,4 +75,10 @@ canvas {
     justify-content: center;
     align-items: center;
     border-style: solid;
+}
+
+#menuButtons {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
 }
