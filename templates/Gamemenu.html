@@ -4,13 +4,14 @@
     <div id="gameMenu">
         <div id="menuButtons">
             <button id="startGameButton">Start game</button>
-            <button id="loginButton">Login</button>
-            <button id="signupButton">Signup</button>
+            <a href="{{ url_for('login') }}"><button id="loginButton">Login</button></a>
+            <a href="{{ url_for('signup') }}"><button id="signupButton">Signup</button></a>
             <select name="difficulty" id="difficultySelector">
                 <option value="easy">Easy</option>
                 <option value="medium">Medium</option>
                 <option value="hard">Hard</option>
             </select>
+            <button id="logoutButton">Logout</button>
         </div>
         <div id="leaderBoard">
             <h2>Leaderboard</h2>

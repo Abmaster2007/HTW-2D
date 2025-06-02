@@ -2,6 +2,11 @@ html {
     background-color: rgb(49, 49, 49);
 }
 
+a {
+    color: white;
+    text-decoration: none;
+}
+
 @font-face {
     font-family: 'VCR OSD Mono';
     font-style: normal;
@@ -54,7 +59,9 @@ canvas {
     padding: 10px 20px;
     font-size: 20px;
     cursor: pointer;
-    gap: 10px;
+    transition: background-color 0.3s, box-shadow 0.3s;
+    width: 200px;
+    height: 50px;
 }
 
 #gameMenu button:hover {

@@ -10,6 +10,7 @@
 * [ ] 6: In the bottom left of the main menu, there should be a text that says "Logged in: {user}" when logged in or signed up that should be boxed in.
 * [X] ~~*7: The menu should be centered in the middle of the screen that is enclosed in a box.*~~ [2025-05-29]
 * [X] ~~*8: The menu should have a difficulty button between the login and play button that modifies the behaviour of the enemies and the main character, ranged from Easy, Normal, and Hard.*~~ [2025-05-29]
+* [X] ~~*9: The menu should have a logout button for the user to logout of the account.*~~ [2025-06-02]
 
 # 1. The game
 * [ ] 1.1: If the user is logged in, start the game. Else, tell the player that they do not have an account signed in and lead the player to the login page.
@@ -57,9 +58,9 @@
 
 # 2. Login page
 
-* [ ] 2.1: There should be an input field "Username" for username in str form.
-* [ ] 2.2: There should be an input field "Password" for password in str form.
-* [ ] 2.3: There should be a button "Login" that confirms the form for username and password. 
+* [X] ~~*2.1: There should be an input field "Username" for username in str form.*~~ [2025-06-02]
+* [X] ~~*2.2: There should be an input field "Password" for password in str form.*~~ [2025-06-02]
+* [X] ~~*2.3: There should be a button "Login" that confirms the form for username and password.*~~ [2025-06-02] 
 * [ ] 2.4: If user exist, go back to the main menu with the text "logged in: {user}" added to the main menu. If not, alert the user that the username or password doesn't exist.
 * [ ] 2.5: The form should be closed in a box that is in the center of the screen.
 * [ ] 2.6: There should be text "Don't have an account?" above the button "Signup" at the bottom left of the form that takes the user to the signup page.
