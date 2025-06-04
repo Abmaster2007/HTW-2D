@@ -15,9 +15,21 @@
     <label for="password">Password:</label>
     <input type="password" id="password" name="password" required>
     <br>
-    <input type="checkbox" onclick="ShowPassword()" id="showPasswordCheckbox">Show Password
-    <br>
-    <button type="submit" value="Login" id="loginButtonSubmit">Login</button>
+    <div class="checkbox-container">
+      <input type="checkbox" onclick="ShowPassword()" id="showPasswordCheckbox">Show Password
+      <br>
+    </div>
+      <button type="submit" value="Login" id="loginButtonSubmit">Login</button>
   </form>
   <p>Don't have an account? <a href="{{ url_for('signup') }}"><u>Sign up here</u></a></p>
+  <script>
+    function ShowPassword() {
+      var passwordField = document.getElementById("password");
+      if (passwordField.type === "password") {
+        passwordField.type = "text";
+      } else {
+        passwordField.type = "password";
+      }
+    }
+  </script>
 {% endblock %}

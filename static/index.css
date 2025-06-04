@@ -101,12 +101,17 @@ canvas {
     font-size: 16px;
 }
 
+
 #loginForm label {
     display: block;
     margin-bottom: 10px;
     font-family: 'VCR OSD Mono', monospace;
 }
 
+#showPasswordCheckbox {
+    margin: -8vw;
+    cursor: pointer;
+}
 
 #loginForm input {
     width: 20vw;
@@ -121,7 +126,7 @@ canvas {
 }
 
 #loginButtonSubmit {
-    width: 20vw;
+    width: 23vw;
     padding: 10px;
     background-color: rgb(18, 14, 14);
     color: white;
@@ -143,7 +148,55 @@ canvas {
     box-shadow:inset 0 0 5px rgba(255, 255, 255, 0.5);
 }
 
-#showPasswordCheckbox {
-    margin-right: -50px;
+#signupForm {
+    width: 50vw;
+    padding: 10px;
+    margin-bottom: 10px;
+    border-style: solid;
+    border-color: white;
+    background-color: rgb(30, 30, 30);
+    color: white;
+    font-size: 16px;
+}
+
+#signupForm label {
+    display: block;
+    margin-bottom: 10px;
+    font-family: 'VCR OSD Mono', monospace;
+}
+
+#signupForm input {
+    width: 20vw;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-style: solid;
+    border-color: white;
+    background-color: rgb(30, 30, 30);
+    color: white;
+    font-family: 'VCR OSD Mono', monospace;
+    font-size: 16px;
+}
+
+#signupButtonSubmit {
+    width: 23vw;
+    padding: 10px;
+    background-color: rgb(18, 14, 14);
+    color: white;
+    border-style: solid;
+    border-color: white;
+    box-shadow:inset 0 0 10px rgba(255, 255, 255, 0.5);
+    font-family: 'VCR OSD Mono', monospace;
+    font-size: 16px;
     cursor: pointer;
 }
+
+#signupButtonSubmit:hover {
+    background-color: rgb(30, 30, 30);
+    box-shadow:inset 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+#signupButtonSubmit:active {
+    background-color: rgb(53, 2, 2);
+    box-shadow:inset 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
