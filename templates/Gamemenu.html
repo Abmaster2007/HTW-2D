@@ -3,15 +3,23 @@
 {% block content %}
     <div id="gameMenu">
         <div id="menuButtons">
-            <button id="startGameButton">Start game</button>
-            <a href="{{ url_for('login') }}"><button id="loginButton">Login</button></a>
-            <a href="{{ url_for('signup') }}"><button id="signupButton">Signup</button></a>
-            <select name="difficulty" id="difficultySelector">
-                <option value="easy">Easy</option>
-                <option value="medium">Medium</option>
-                <option value="hard">Hard</option>
-            </select>
-            <button id="logoutButton">Logout</button>
+            {% if session.get('username') %}
+                <button id="startGameButton">Start game</button>
+                <select name="difficulty" id="difficultySelector">
+                    <option value="easy">Easy</option>
+                    <option value="medium">Medium</option>
+                    <option value="hard">Hard</option>
+                </select>
+            {% else %}
+                <a href="{{ url_for('login') }}"><button id="loginButton">Login</button></a>
+                <a href="{{ url_for('signup') }}"><button id="signupButton">Signup</button></a>
+            {% endif %}
+            {% if session.get('username') %}
+                <a href="{{ url_for('logout') }}"><button id="logoutButton">Logout</button></a>
+                    <p>Welcome, {{ session['username'] }}!</p>
+                {% else %}
+                <p>Please log in to play.</p>
+            {% endif %}
         </div>
         <div id="leaderBoard">
             <h2>Leaderboard</h2>

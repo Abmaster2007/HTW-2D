@@ -1,0 +1,46 @@
+.alert {
+    padding: 20px;
+    margin-bottom: 15px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    font-family: 'VCR OSD Mono', monospace;
+    font-size: 16px;
+}
+
+.alert-danger {
+    color: white;
+    background-color: #f44336; /* Red */
+    border-color: #f44336;
+}
+
+.alert-success {
+    color: white;
+    background-color: #4CAF50; /* Green */
+    border-color: #4CAF50;
+}
+
+.alert-info {
+    color: white;
+    background-color: #2196F3; /* Blue */
+    border-color: #2196F3;
+}
+
+.alert-warning {
+    color: white;
+    background-color: #ff9800; /* Orange */
+    border-color: #ff9800;
+}
+
+.alert .close {
+    color: white;
+    float: right;
+    font-size: 20px;
+    font-weight: bold;
+    line-height: 20px;
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.alert .close:hover {
+    color: black;
+}

@@ -1,14 +1,7 @@
-{% extends "index.html" %}
+{% extends "Index.html" %}
 
 {% block content %}
-  <h2>Sign Up</h2>
   <form id="signupForm" method="post" action="/signup_submit">
-    {% if error %}
-      <p style="color: red;">{{ error }}</p>
-    {% endif %}
-    {% if success %}
-      <p style="color: green;">{{ success }}</p>
-    {% endif %}
     <label for="username">Username:</label>
     <input type="text" id="username" name="username" required>
     <br>
