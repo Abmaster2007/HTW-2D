@@ -1,35 +1,18 @@
 {% extends "index.html" %}
 
 {% block content %}
-  <h2>Login</h2>
-  <form id="loginForm" method="post" action="/login_submit">
-    {% if error %}
-      <p style="color: red;">{{ error }}</p>
-    {% endif %}
-    {% if success %}
-      <p style="color: green;">{{ success }}</p>
-    {% endif %}
+<div id="contentArea">
+   <form id="loginForm" method="post" action="/login_submit">
+    <h2>Login</h2>
     <label for="username">Username:</label>
     <input type="text" id="username" name="username" required>
     <br>
     <label for="password">Password:</label>
     <input type="password" id="password" name="password" required>
     <br>
-    <div class="checkbox-container">
-      <input type="checkbox" onclick="ShowPassword()" id="showPasswordCheckbox">Show Password
-      <br>
-    </div>
-      <button type="submit" value="Login" id="loginButtonSubmit">Login</button>
+    <button type="submit" value="Login" id="loginButtonSubmit">Login</button>
+    <p>Don't have an account?</p>
+    <button id="signupButton" onclick="loadPage('{{ url_for('signup') }}')">Signup</button>
   </form>
-  <p>Don't have an account? <a href="{{ url_for('signup') }}"><u>Sign up here</u></a></p>
-  <script>
-    function ShowPassword() {
-      var passwordField = document.getElementById("password");
-      if (passwordField.type === "password") {
-        passwordField.type = "text";
-      } else {
-        passwordField.type = "password";
-      }
-    }
-  </script>
+</div>
 {% endblock %}

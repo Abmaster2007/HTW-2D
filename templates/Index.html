@@ -8,30 +8,41 @@
 </head>
 
 <body>
-    <h1 id="pageTitle">Hunt the Wumpus</h1>
-    {% with messages = get_flashed_messages(with_categories=true) %}
-        {% if messages %}
-        {% for category, message in messages %}
-            <div class="alert alert-{{ category }}">
-            <span class="close" onclick="this.parentElement.style.display='none';">&times;</span>
-            {{ message }}
-            </div>
-        {% endfor %}
-        {% endif %}
-    {% endwith %}
-
     <audio id="backgroundAudio" autoplay loop>
         <source src="{{ url_for('static', filename='audio/8_bit_menu.mp3') }}" type="audio/mpeg">
     </audio>
+    <h1 id="pageTitle" onclick="loadPage('{{ url_for('index') }}')">Hunt the Wumpus</h1>
 
+    <!-- ⬇️ This content will be dynamically updated -->
+    <div id="contentArea">{% block content %}{% endblock %}</div>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="alert alert-{{ category }}">
+                        <span class="close" onclick="this.parentElement.style.display='none';">&times;</span>
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
     <script>
-        const audio = document.getElementById('backgroundAudio');
-        audio.loop = true; // Ensure looping
-        audio.play().catch(error => {
-            console.log("Autoplay blocked. User interaction required.");
-        });
-    </script>
+        function loadPage(path) {
+            fetch(path)
+            .then(res => res.text())
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newContent = doc.querySelector('#contentArea');
+                console.logntent = doc.querySelector('#contentArea');
+                if (newContent) {
+                document.getElementById('contentArea').innerHTML = newContent.innerHTML;
+                } else {
+                console.error("Could not find #contentArea in fetched page");
+                }
+            })
+        .catch(console.error);
+}
 
-    {% block content %} {% endblock %}
+    </script>
 </body>
 </html>

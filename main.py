@@ -29,9 +29,11 @@ def login_submit():
             session['user_id'] = user['id']  # Access user ID using key
             session['username'] = user['username']  # Access username using key
             return redirect(url_for('index'))
-        elif user and not check_password_hash(user['password'], password):  # Access password using key
+        elif user and not check_password_hash(user['password'], password):
+            flash('Invalid password. Please try again.', 'danger')
             return redirect(url_for('login'))
         else:
+            flash('Username not found. Please try again.', 'danger')
             return redirect(url_for('login'))
 
 @app.route('/signup')
@@ -46,6 +48,7 @@ def signup_submit():
         password_confirm = request.form['confirmPassword']
 
         if password != password_confirm:
+            flash('Passwords do not match. Please try again.', 'danger')
             return redirect(url_for('signup'))
  
         confirm_password = generate_password_hash(password)

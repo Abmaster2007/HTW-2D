@@ -1,6 +1,8 @@
 {% extends "Index.html" %}
 
 {% block content %}
+<div id="contentArea">
+  <h2>Sign Up</h2>
   <form id="signupForm" method="post" action="/signup_submit">
     <label for="username">Username:</label>
     <input type="text" id="username" name="username" required>
@@ -13,5 +15,7 @@
     <br>
     <button type="submit" value="Sign Up" id="signupButtonSubmit">Sign Up</button>
   </form>
-  <p>Already have an account? <a href="{{ url_for('login') }}"><u>Log in here</u></a></p>
+    <p>Already have an account?</p>
+    <button id="loginButton" onclick="loadPage('{{ url_for('login') }}')">Login</button>
+</div>
 {% endblock %}
