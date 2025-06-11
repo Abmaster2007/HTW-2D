@@ -1,6 +1,7 @@
 import sqlite3
 from flask import Flask, render_template, url_for, redirect, request, session, flash, jsonify
 from werkzeug.security import generate_password_hash, check_password_hash
+import tkinter as tk
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
@@ -31,10 +32,10 @@ def login_submit():
             return redirect(url_for('index'))
         elif user and not check_password_hash(user['password'], password):
             flash('Invalid password. Please try again.', 'danger')
-            return redirect(url_for('login'))
+            return render_template('Login.html')
         else:
             flash('Username not found. Please try again.', 'danger')
-            return redirect(url_for('login'))
+            return render_template('Login.html')
 
 @app.route('/signup')
 def signup():
@@ -49,8 +50,8 @@ def signup_submit():
 
         if password != password_confirm:
             flash('Passwords do not match. Please try again.', 'danger')
-            return redirect(url_for('signup'))
- 
+            return render_template('Signup.html')
+
         confirm_password = generate_password_hash(password)
         # Check if the username already exists
         conn = sqlite3.connect('HTW-2D/database/database.db')
@@ -61,13 +62,13 @@ def signup_submit():
 
         if existing_user:
             flash('Username already exists. Please choose a different one.', 'danger')
-            return redirect(url_for('signup'))
+            return render_template('Signup.html')
 
         cursor.execute("INSERT INTO users (username, password) VALUES (?, ?)", (username, confirm_password))
         conn.commit()
         conn.close()
         flash('Signup successful! You can now log in.', 'success')
-        return redirect(url_for('login'))
+        return render_template('Login.html')
 
 
 @app.route('/logout')
@@ -92,6 +93,13 @@ def debug_session():
             return "Session active but user not found in database."
     else:
         return "No active session."
+
+@app.route('/Gameplay')
+def gameplay():
+    if 'user_id' not in session:
+        flash('You must be logged in to access the game.', 'warning')
+        return redirect(url_for('login'))
+    return render_template('Gameplay.html')
 
 if __name__ == '__main__':
     app.run(debug=True)

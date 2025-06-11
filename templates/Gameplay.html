@@ -1,0 +1,71 @@
+{% extends "index.html" %}
+
+{% block content %}
+<div id="gameArea">
+    <canvas id="gameCanvas" width="1000" height="500" style="border:1px solid #000000;">
+    </canvas>
+</div>
+<script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d'); // Get the 2D rendering context
+
+    // Draw a rectangle
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(50, 50, 100, 100);
+
+    // Draw a circle
+    ctx.beginPath();
+    ctx.arc(200, 200, 50, 0, Math.PI * 2);
+    ctx.fillStyle = 'red';
+    ctx.fill();
+
+    // Draw text
+    ctx.font = '20px Arial';
+    ctx.fillStyle = 'white';
+    ctx.fillText('Hunt the Wumpus', 300, 50);
+
+    canvas.addEventListener('click', (event) => {
+        const rect = canvas.getBoundingClientRect();
+        const x = event.clientX - rect.left;
+        const y = event.clientY - rect.top;
+
+        console.log(`Mouse clicked at: (${x}, ${y})`);
+        ctx.fillStyle = 'green';
+        ctx.fillRect(x - 10, y - 10, 20, 20); // Draw a small square at the click position
+    });
+
+    let player = { x: 100, y: 100 };
+
+    // Draw the player
+    function drawPlayer() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+        ctx.fillStyle = 'white';
+        ctx.fillRect(player.x, player.y, 20, 20); // Draw the player
+    }
+
+    // Move the player with arrow keys
+    document.addEventListener('keydown', (event) => {
+        switch (event.key) {
+            case 'ArrowUp':
+                event.preventDefault();
+                player.y -= 10;
+                break;
+            case 'ArrowDown':
+                event.preventDefault();
+                player.y += 10;
+                break;
+            case 'ArrowLeft':
+                event.preventDefault();
+                player.x -= 10;
+                break;
+            case 'ArrowRight':
+                event.preventDefault();
+                player.x += 10;
+                break;
+        }
+        drawPlayer();
+    });
+
+    drawPlayer(); // Initial draw
+</script>
+{% endblock %}

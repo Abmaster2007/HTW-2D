@@ -44,7 +44,8 @@ body {
 }
 
 canvas {
-    display: none
+    display: block; /* Ensure the canvas is visible */
+    margin: auto;
 }
 
 #gameMenu {
@@ -162,6 +163,29 @@ canvas {
     box-shadow:inset 0 0 5px rgba(255, 255, 255, 0.5);
 }
 
+#loginButton {
+    width: 23vw;
+    padding: 10px;
+    background-color: rgb(18, 14, 14);
+    color: white;
+    border-style: solid;
+    border-color: white;
+    box-shadow:inset 0 0 10px rgba(255, 255, 255, 0.5);
+    font-family: 'VCR OSD Mono', monospace;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#loginButton:hover {
+    background-color: rgb(30, 30, 30);
+    box-shadow:inset 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+#loginButton:active {
+    background-color: rgb(53, 2, 2);
+    box-shadow:inset 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
 #signupForm {
     width: 50vw;
     padding: 10px;
@@ -171,6 +195,11 @@ canvas {
     background-color: rgb(30, 30, 30);
     color: white;
     font-size: 16px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin-top: 8vw;
 }
 
 #signupForm label {
@@ -212,4 +241,34 @@ canvas {
 #signupButtonSubmit:active {
     background-color: rgb(53, 2, 2);
     box-shadow:inset 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+#signupButton {
+    width: 23vw;
+    padding: 10px;
+    background-color: rgb(18, 14, 14);
+    color: white;
+    border-style: solid;
+    border-color: white;
+    box-shadow:inset 0 0 10px rgba(255, 255, 255, 0.5);
+    font-family: 'VCR OSD Mono', monospace;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#signupButton:hover {
+    background-color: rgb(30, 30, 30);
+    box-shadow:inset 0 0 20px rgba(255, 255, 255, 0.5);
+}
+
+#signupButton:active {
+    background-color: rgb(53, 2, 2);
+    box-shadow:inset 0 0 5px rgba(255, 255, 255, 0.5);
+}
+
+#gameArea {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh; /* Full viewport height */  
 }

@@ -4,7 +4,7 @@
     <div id="gameMenu">
         <div id="menuButtons">
             {% if session.get('username') %}
-                <button id="startGameButton">Start game</button>
+                <a href="{{ url_for('gameplay') }}"><button id="startGameButton">Start game</button></a>
                 <select name="difficulty" id="difficultySelector">
                     <option value="easy">Easy</option>
                     <option value="medium">Medium</option>

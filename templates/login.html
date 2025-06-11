@@ -14,5 +14,15 @@
     <p>Don't have an account?</p>
     <button id="signupButton" onclick="loadPage('{{ url_for('signup') }}')">Signup</button>
   </form>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+              {% for category, message in messages %}
+                  <div class="alert alert-{{ category }}">
+                      <span class="close" onclick="this.parentElement.style.display='none';">&times;</span>
+                      {{ message }}
+                  </div>
+              {% endfor %}
+          {% endif %}
+      {% endwith %}
 </div>
 {% endblock %}
