@@ -266,9 +266,11 @@ canvas {
     box-shadow:inset 0 0 5px rgba(255, 255, 255, 0.5);
 }
 
-#gameArea {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh; /* Full viewport height */  
+
+#gameCanvas {
+    width: 100%;
+    height: 100%;
+    border: 5px solid white; /* Set the border width and color */   
+    box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Add a glowing effect */
+    background-color: rgb(30, 30, 30); /* Optional: Set a background color */
 }

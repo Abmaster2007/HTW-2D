@@ -2,70 +2,140 @@
 
 {% block content %}
 <div id="gameArea">
-    <canvas id="gameCanvas" width="1000" height="500" style="border:1px solid #000000;">
+    <canvas id="gameCanvas" width="1000" height="500" (window:resize)="onResize($event)" style="border:1px solid #000000;">
     </canvas>
 </div>
 <script>
+    const backgroundAudio = document.getElementById('backgroundAudio');
+    backgroundAudio.src = "{{ url_for('static', filename='audio/8_bit_retro_forest.mp3') }}"; // Change the audio source for gameplay
+    backgroundAudio.play(); // Play the audio
+    backgroundAudio.loop = true; // Loop the audio
+
     const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d'); // Get the 2D rendering context
+    const ctx = canvas.getContext('2d');
+    const tileSize = 50; // Size of each tile
+    const multiplier = 1; // Multiplier for the canvas size
 
-    // Draw a rectangle
-    ctx.fillStyle = 'blue';
-    ctx.fillRect(50, 50, 100, 100);
+    // Set canvas size based on multiplier
+    canvas.width = 100 * tileSize * multiplier; // 100 tiles wide
+    canvas.height = 50 * tileSize * multiplier; // 50 tiles high
 
-    // Draw a circle
-    ctx.beginPath();
-    ctx.arc(200, 200, 50, 0, Math.PI * 2);
-    ctx.fillStyle = 'red';
-    ctx.fill();
+    
+    let maze = [];
+    let hunter = { x: 0, y: 0, ammo: 10 }; // Hunter's initial position and stats
 
-    // Draw text
-    ctx.font = '20px Arial';
-    ctx.fillStyle = 'white';
-    ctx.fillText('Hunt the Wumpus', 300, 50);
+    // Randomly place the player in a valid spot
+    function placePlayer() {
+        let validPositionFound = false;
 
-    canvas.addEventListener('click', (event) => {
-        const rect = canvas.getBoundingClientRect();
-        const x = event.clientX - rect.left;
-        const y = event.clientY - rect.top;
+        while (!validPositionFound) {
+            const randomX = Math.floor(Math.random() * maze[0].length);
+            const randomY = Math.floor(Math.random() * maze.length);
 
-        console.log(`Mouse clicked at: (${x}, ${y})`);
-        ctx.fillStyle = 'green';
-        ctx.fillRect(x - 10, y - 10, 20, 20); // Draw a small square at the click position
-    });
+            if (maze[randomY][randomX] === 1) { // Check if the tile is a path
+                player.x = randomX;
+                player.y = randomY;
+                validPositionFound = true;
+            }
+        }
+    }
 
-    let player = { x: 100, y: 100 };
+    function placeHunter() {
+        let validPositionFound = false;
 
-    // Draw the player
-    function drawPlayer() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+        while (!validPositionFound) {
+            const randomX = Math.floor(Math.random() * maze[0].length);
+            const randomY = Math.floor(Math.random() * maze.length);
+
+            if (maze[randomY][randomX] === 1) { // Check if the tile is a path
+                hunter.x = randomX;
+                hunter.y = randomY;
+                validPositionFound = true;
+            }
+        }
+    }
+
+    // Fetch maze data from the backend
+    fetch('/generate_maze?multiplier=' + multiplier)
+        .then(response => response.json())
+        .then(data => {
+            console.log(data); // Debugging: Log the fetched data
+            maze = data.maze;
+            hunter = data.hunter;
+
+            canvas.width = maze[0].length * tileSize;
+            canvas.height = maze.length * tileSize;
+
+            placeHunter();
+            drawMaze();
+            drawHunter();
+        });
+
+    function drawMaze() {
+        for (let y = 0; y < maze.length; y++) {
+            for (let x = 0; x < maze[y].length; x++) {
+                ctx.fillStyle = maze[y][x] === 1 ? 'white' : 'black'; // Path = white, Wall = black
+                ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
+            }
+        }
+    }
+
+    // // Draw the player
+    // function drawPlayer() {
+    //     ctx.fillStyle = 'blue';
+    //     ctx.fillRect(player.x * tileSize, player.y * tileSize, tileSize, tileSize);
+    // }
+
+    // Draw the hunter
+    function drawHunter() {
+        ctx.fillStyle = 'blue'; // Hunter's color
+        ctx.fillRect(hunter.x * tileSize, hunter.y * tileSize, tileSize, tileSize);
+
+        // Display hunter's stats
+        ctx.font = '16px Arial';
         ctx.fillStyle = 'white';
-        ctx.fillRect(player.x, player.y, 20, 20); // Draw the player
+        ctx.fillText(`Ammo: ${hunter.ammo}`, 10, 20);
     }
 
     // Move the player with arrow keys
     document.addEventListener('keydown', (event) => {
-        switch (event.key) {
-            case 'ArrowUp':
-                event.preventDefault();
-                player.y -= 10;
+        let newX = player.x;
+        let newY = player.y;
+
+        switch (event.key.toLowerCase()) {
+            case 'w':
+                event.preventDefault(); // Prevent scrolling
+                if (newY > 0) {
+                    newY--;
+                }
                 break;
-            case 'ArrowDown':
-                event.preventDefault();
-                player.y += 10;
+            case 's':
+                event.preventDefault(); // Prevent scrolling
+                if (newY < maze.length - 1) {
+                    newY++;
+                }
                 break;
-            case 'ArrowLeft':
-                event.preventDefault();
-                player.x -= 10;
+            case 'a':
+                event.preventDefault(); // Prevent scrolling
+                if (newX > 0) {
+                    newX--;
+                }
                 break;
-            case 'ArrowRight':
-                event.preventDefault();
-                player.x += 10;
+            case 'd':
+                event.preventDefault(); // Prevent scrolling
+                if (newX < maze[0].length - 1) {
+                    newX++;
+                }
                 break;
         }
-        drawPlayer();
-    });
 
-    drawPlayer(); // Initial draw
+        // Check if the new position is a path
+        if (maze[newY] && maze[newY][newX] === 1) {
+            player.x = newX;
+            player.y = newY;
+            drawMaze(); // Redraw the maze
+            drawPlayer(); // Redraw the player
+        }
+    });
 </script>
 {% endblock %}
