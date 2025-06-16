@@ -13,13 +13,13 @@
 * [X] ~~*9: The menu should have a logout button for the user to logout of the account.*~~ [2025-06-02]
 
 # 1. The game
-* [ ] 1.1: If the user is logged in, start the game. Else, tell the player that they do not have an account signed in and lead the player to the login page.
-* [ ] 1.2: The game should be displayed in a rectangle box in the center of the screen.
-* [ ] 1.3: The game should display the cautions such as being a scary game and loud noises and has a button to continue to the next screen
-* [ ] 1.4: The game should then display the controls of the game such as movement, actions, and rules and has a button to continue to the next screen
-* [ ] 1.5: The game should then display the story of the game and has a button to continue to the next screen.
+* [X] ~~*1.1: If the user is logged in, start the game. Else, tell the player that they do not have an account signed in and lead the player to the login page.*~~ [2025-06-16]
+* [X] ~~*1.2: The game should be displayed in a rectangle box in the center of the screen.*~~ [2025-06-16]
+* [X] ~~*1.3: The game should display the cautions such as being a scary game and loud noises and has a button to continue to the next screen*~~ [2025-06-16]
+* [X] ~~*1.4: The game should then display the controls of the game such as movement, actions, and rules and has a button to continue to the next screen*~~ [2025-06-16]
+* [X] ~~*1.5: The game should then display the story of the game and has a button to continue to the next screen.*~~ [2025-06-16]
 * [ ] 1.6: The game should generate the cave in the shape of a dodecahedron.
-* [ ] 1.7: The game should put the main character in a random area that does not occupy the same spot as the wumpus.
+* [X] ~~*1.7: The game should put the main character in a random area that does not occupy the same spot as the wumpus.*~~ [2025-06-16]
 * [ ] 1.8: The game should put the wumpus in a random area that does not occupy the same spot as the main character.
 * [ ] 1.9: The game should put 'n' amount of bottomless pits in random areas that does not occupy both the main character and the wumpus.
 * [ ] 1.10: The game should put 'n' amount of superbats in random areas that does not occupy the main character, wumpus, and bottomless pits.
@@ -28,7 +28,7 @@
 * [ ] 1.12: When the game is started, set the game's status to True and start the timer.
 
 # 1.7 The main character
-* [ ] 1.7.1: The main character should have 'n' arrows.
+* [X] ~~*1.7.1: The main character should have 'n' arrows.*~~ [2025-06-16]
 * [ ] 1.7.2: The main character should choose how many rooms for the arrow to shoot through.
 * [ ] 1.7.3: If the chosen points are connected with each other, shoot in that path. Else, shoot in a random path with the given amount of rooms.
 * [ ] 1.7.4: The main character should get rid of 1 arrow when used.

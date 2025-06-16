@@ -29,4 +29,25 @@
         </div>
     </div>
 
+    <script>
+        document.getElementById('difficultySelector').addEventListener('change', function() {
+            const selectedDifficulty = this.value;
+            console.log('Selected difficulty:', selectedDifficulty);
+            // You can add logic here to handle the difficulty change
+            if (selectedDifficulty === 'easy') {
+                // Set game parameters for easy difficulty
+                document.getElementById('htmlElement').style.backgroundColor = 'green'; // Example: change background color for easy difficulty
+                console.log('Easy difficulty selected');
+            } else if (selectedDifficulty === 'medium') {
+                // Set game parameters for medium difficulty
+                document.getElementById('htmlElement').style.backgroundColor = 'yellow'; // Example: change background color for medium difficulty
+                console.log('Medium difficulty selected');
+            } else if (selectedDifficulty === 'hard') {
+                // Set game parameters for hard difficulty
+                document.getElementById('htmlElement').style.backgroundColor = 'red'; // Example: change background color for hard difficulty
+                console.log('Hard difficulty selected');
+            }
+        });
+    </script>
+
 {% endblock %}

@@ -1,9 +1,28 @@
 {% extends "index.html" %}
 
 {% block content %}
-<div id="gameArea">
+<div id="gameArea" style="display: none;">
     <canvas id="gameCanvas" width="1000" height="500" (window:resize)="onResize($event)" style="border:1px solid #000000;">
     </canvas>
+</div>
+
+
+<div id="precautionScreen" style="display: block;">
+    <h1>Precaution</h1>
+    <p>Ensure you are in a safe environment while playing. Avoid distractions and focus on the game.</p>
+    <button id="nextButton" onclick="showInstructions()">Next</button>
+</div>
+
+<div id="instructionsScreen" style="display: none;">
+    <h1>Instructions</h1>
+    <p>Use W, A, S, D or buttons on the screen to move the hunter. Press SPACE to shoot. Avoid any entities/hazards while exploring the maze.</p>
+    <button id="nextButton" onclick="showStory()">Next</button>
+</div>
+
+<div id="storyScreen" style="display: none;">
+    <h1>Story</h1>
+    <p>You are a hunter trapped in a mysterious maze. Your goal is to find and defeat the Wumpus lurking in the shadows. Be careful, as the maze is full of dangers!</p>
+    <button id="nextButton" onclick="startGame()">Start Game</button>
 </div>
 <script>
     const backgroundAudio = document.getElementById('backgroundAudio');
@@ -23,22 +42,23 @@
     
     let maze = [];
     let hunter = { x: 0, y: 0, ammo: 10 }; // Hunter's initial position and stats
+    let lastDirection = null; // Stores the last direction the hunter moved
 
-    // Randomly place the player in a valid spot
-    function placePlayer() {
-        let validPositionFound = false;
+    // // Randomly place the player in a valid spot
+    // function placePlayer() {
+    //     let validPositionFound = false;
 
-        while (!validPositionFound) {
-            const randomX = Math.floor(Math.random() * maze[0].length);
-            const randomY = Math.floor(Math.random() * maze.length);
+    //     while (!validPositionFound) {
+    //         const randomX = Math.floor(Math.random() * maze[0].length);
+    //         const randomY = Math.floor(Math.random() * maze.length);
 
-            if (maze[randomY][randomX] === 1) { // Check if the tile is a path
-                player.x = randomX;
-                player.y = randomY;
-                validPositionFound = true;
-            }
-        }
-    }
+    //         if (maze[randomY][randomX] === 1) { // Check if the tile is a path
+    //             player.x = randomX;
+    //             player.y = randomY;
+    //             validPositionFound = true;
+    //         }
+    //     }
+    // }
 
     function placeHunter() {
         let validPositionFound = false;
@@ -72,9 +92,16 @@
         });
 
     function drawMaze() {
+        const visionRadius = 5; // Number of tiles visible around the hunter
+
         for (let y = 0; y < maze.length; y++) {
             for (let x = 0; x < maze[y].length; x++) {
-                ctx.fillStyle = maze[y][x] === 1 ? 'white' : 'black'; // Path = white, Wall = black
+                const distance = Math.sqrt((hunter.x - x) ** 2 + (hunter.y - y) ** 2);
+                if (distance <= visionRadius) {
+                    ctx.fillStyle = maze[y][x] === 1 ? 'white' : 'black'; // Path = white, Wall = black
+                } else {
+                    ctx.fillStyle = 'black'; // Tiles outside vision = black
+                }
                 ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
             }
         }
@@ -89,7 +116,10 @@
     // Draw the hunter
     function drawHunter() {
         ctx.fillStyle = 'blue'; // Hunter's color
-        ctx.fillRect(hunter.x * tileSize, hunter.y * tileSize, tileSize, tileSize);
+        // ctx.fillRect(hunter.x * tileSize, hunter.y * tileSize, tileSize, tileSize);
+        ctx.beginPath();
+        ctx.arc(hunter.x * tileSize + tileSize / 2, hunter.y * tileSize + tileSize / 2, tileSize / 3, 0, Math.PI * 2);
+        ctx.fill();
 
         // Display hunter's stats
         ctx.font = '16px Arial';
@@ -97,45 +127,130 @@
         ctx.fillText(`Ammo: ${hunter.ammo}`, 10, 20);
     }
 
+
     // Move the player with arrow keys
     document.addEventListener('keydown', (event) => {
-        let newX = player.x;
-        let newY = player.y;
+        let newX = hunter.x;
+        let newY = hunter.y;
 
-        switch (event.key.toLowerCase()) {
-            case 'w':
-                event.preventDefault(); // Prevent scrolling
+        switch (event.key.toLowerCase()) { // Convert key to lowercase for consistency
+            case 'w': // Move up
+                event.preventDefault();
                 if (newY > 0) {
                     newY--;
                 }
+                lastDirection = 'up'; // Update last direction
                 break;
-            case 's':
-                event.preventDefault(); // Prevent scrolling
+            case 's': // Move down
+                event.preventDefault();
                 if (newY < maze.length - 1) {
                     newY++;
                 }
+                lastDirection = 'down'; // Update last direction
                 break;
-            case 'a':
-                event.preventDefault(); // Prevent scrolling
+            case 'a': // Move left
+                event.preventDefault();
                 if (newX > 0) {
                     newX--;
                 }
+                lastDirection = 'left'; // Update last direction
                 break;
-            case 'd':
-                event.preventDefault(); // Prevent scrolling
+            case 'd': // Move right
+                event.preventDefault();
                 if (newX < maze[0].length - 1) {
                     newX++;
                 }
+                lastDirection = 'right'; // Update last direction
                 break;
+            case ' ': // Shoot arrow
+                event.preventDefault();
+                const direction = event.shiftKey ? 'up' : event.ctrlKey ? 'down' : event.altKey ? 'left' : 'right';
+                shoot(lastDirection);
+                return; // Exit the switch to avoid moving the hunter
+        }
+
+        function shoot(direction) {
+            if (hunter.ammo > 0) {
+                hunter.ammo--; // Reduce ammo by 1
+                console.log(`Hunter shot ${direction}. Remaining ammo: ${hunter.ammo}`);
+
+                let shotX = hunter.x;
+                let shotY = hunter.y;
+
+                const interval = setInterval(() => {
+                    // Move the shot in the specified direction
+                    switch (direction) {
+                        case 'up':
+                            shotY--;
+                            break;
+                        case 'down':
+                            shotY++;
+                            break;
+                        case 'left':
+                            shotX--;
+                            break;
+                        case 'right':
+                            shotX++;
+                            break;
+                    }
+
+                    // Check if the shot hits a wall or goes out of bounds
+                    if (
+                        shotY < 0 || shotY >= maze.length || 
+                        shotX < 0 || shotX >= maze[0].length || 
+                        maze[shotY][shotX] === 0
+                    ) {
+                        console.log(`Shot stopped at (${shotX}, ${shotY})`);
+                        clearInterval(interval); // Stop the shot
+                        drawMaze(); // Redraw the maze
+                        drawHunter(); // Redraw the hunter
+                        return;
+                    }
+
+                    // Redraw the maze and render the shot
+                    drawMaze();
+                    drawHunter();
+                    drawShot(shotX, shotY);
+                }, 100); // Move the shot every 100ms
+            } else {
+                console.log('No ammo left!');
+            }
         }
 
         // Check if the new position is a path
         if (maze[newY] && maze[newY][newX] === 1) {
-            player.x = newX;
-            player.y = newY;
+            hunter.x = newX;
+            hunter.y = newY;
             drawMaze(); // Redraw the maze
-            drawPlayer(); // Redraw the player
+            drawHunter(); // Redraw the hunter
         }
     });
+
+    function drawShot(x, y) {
+        ctx.fillStyle = 'red'; // Shot color
+        ctx.beginPath();
+        ctx.arc(x * tileSize + tileSize / 2, y * tileSize + tileSize / 2, tileSize / 6, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    function showInstructions() {
+        document.getElementById('precautionScreen').style.display = 'none';
+        document.getElementById('instructionsScreen').style.display = 'block';
+    }
+
+    function showStory() {
+        document.getElementById('instructionsScreen').style.display = 'none';
+        document.getElementById('storyScreen').style.display = 'block';
+    }
+
+    function startGame() {
+        document.getElementById('storyScreen').style.display = 'none';
+        document.getElementById('gameArea').style.display = 'block';
+        document.getElementById('htmlElement').style.backgroundColor = 'black'; // Change background color for gameplay
+
+        // Start the game logic here
+        drawMaze();
+        drawHunter();
+    }
 </script>
 {% endblock %}
