@@ -8,6 +8,16 @@
 </head>
 
 <body>
+  {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+              {% for category, message in messages %}
+                  <div class="alert alert-{{ category }}">
+                      <span class="close" onclick="this.parentElement.style.display='none';">&times;</span>
+                      {{ message }}
+                  </div>
+              {% endfor %}
+          {% endif %}
+      {% endwith %}
     <audio id="backgroundAudio" autoplay loop>
         <source src="{{ url_for('static', filename='audio/8_bit_menu.mp3') }}" type="audio/mpeg">
     </audio>

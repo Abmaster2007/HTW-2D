@@ -36,15 +36,24 @@
             // You can add logic here to handle the difficulty change
             if (selectedDifficulty === 'easy') {
                 // Set game parameters for easy difficulty
-                document.getElementById('htmlElement').style.backgroundColor = 'green'; // Example: change background color for easy difficulty
+                document.getElementById('htmlElement').style.backgroundColor = 'rgb(49, 49, 49)'; // Example: change background color for easy difficulty
+                document.getElementById('backgroundAudio').src = "{{ url_for('static', filename='audio/8_bit_menu.mp3') }}"; // Change audio for easy difficulty
+                document.getElementById('backgroundAudio').play(); // Play the new audio
+                document.getElementById('backgroundAudio').loop = true; // Ensure it loops
                 console.log('Easy difficulty selected');
             } else if (selectedDifficulty === 'medium') {
                 // Set game parameters for medium difficulty
-                document.getElementById('htmlElement').style.backgroundColor = 'yellow'; // Example: change background color for medium difficulty
+                document.getElementById('htmlElement').style.backgroundColor = 'rgb(36, 36, 36)'; // Example: change background color for medium difficulty
+                document.getElementById('backgroundAudio').src = "{{ url_for('static', filename='audio/8_bit_menu.mp3') }}"; // Change audio for medium difficulty
+                document.getElementById('backgroundAudio').play(); // Play the new audio
+                document.getElementById('backgroundAudio').loop = true; // Ensure it loops
                 console.log('Medium difficulty selected');
             } else if (selectedDifficulty === 'hard') {
                 // Set game parameters for hard difficulty
-                document.getElementById('htmlElement').style.backgroundColor = 'red'; // Example: change background color for hard difficulty
+                document.getElementById('htmlElement').style.backgroundColor = 'rgb(64, 1, 1)'; // Example: change background color for hard difficulty
+                document.getElementById('backgroundAudio').src = "{{ url_for('static', filename='audio/8_bit_menu_eerie.mp3') }}"; // Change audio for hard difficulty
+                document.getElementById('backgroundAudio').play(); // Play the new audio
+                document.getElementById('backgroundAudio').loop = true; // Ensure it loops
                 console.log('Hard difficulty selected');
             }
         });

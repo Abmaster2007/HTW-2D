@@ -4,6 +4,13 @@
 <div id="gameArea" style="display: none;">
     <canvas id="gameCanvas" width="1000" height="500" (window:resize)="onResize($event)" style="border:1px solid #000000;">
     </canvas>
+    <div id="controls" style="text-align: center; margin-top: 10px;">
+        <button id="upButton" onclick="moveHunter('up')">Up</button><br>
+        <button id="leftButton" onclick="moveHunter('left')">Left</button>
+        <button id="downButton" onclick="moveHunter('down')">Down</button>
+        <button id="rightButton" onclick="moveHunter('right')">Right</button><br>
+        <button id="shootButton" onclick="shootHunter()">Shoot</button>
+    </div>
 </div>
 
 
@@ -92,7 +99,7 @@
         });
 
     function drawMaze() {
-        const visionRadius = 5; // Number of tiles visible around the hunter
+        const visionRadius = 1.2; // Number of tiles visible around the hunter
 
         for (let y = 0; y < maze.length; y++) {
             for (let x = 0; x < maze[y].length; x++) {
@@ -251,6 +258,102 @@
         // Start the game logic here
         drawMaze();
         drawHunter();
+    }
+
+    function moveHunter(direction) {
+        let newX = hunter.x;
+        let newY = hunter.y;
+
+        switch (direction) {
+            case 'up':
+                if (newY > 0) {
+                    newY--;
+                }
+                lastDirection = 'up';
+                break;
+            case 'down':
+                if (newY < maze.length - 1) {
+                    newY++;
+                }
+                lastDirection = 'down';
+                break;
+            case 'left':
+                if (newX > 0) {
+                    newX--;
+                }
+                lastDirection = 'left';
+                break;
+            case 'right':
+                if (newX < maze[0].length - 1) {
+                    newX++;
+                }
+                lastDirection = 'right';
+                break;
+        }
+
+        // Check if the new position is a path
+        if (maze[newY] && maze[newY][newX] === 1) {
+            hunter.x = newX;
+            hunter.y = newY;
+            drawMaze();
+            drawHunter();
+        }
+    }
+
+    window.shoot = function(direction) {
+        if (hunter.ammo > 0) {
+            hunter.ammo--;
+            console.log(`Hunter shot ${direction}. Remaining ammo: ${hunter.ammo}`);
+            let shotX = hunter.x;
+            let shotY = hunter.y;
+
+            const interval = setInterval(() => {
+                // Move the shot in the specified direction
+                switch (direction) {
+                    case 'up':
+                        shotY--;
+                        break;
+                    case 'down':
+                        shotY++;
+                        break;
+                    case 'left':
+                        shotX--;
+                        break;
+                    case 'right':
+                        shotX++;
+                        break;
+                }
+
+                // Check if the shot hits a wall or goes out of bounds
+                if (
+                    shotY < 0 || shotY >= maze.length || 
+                    shotX < 0 || shotX >= maze[0].length || 
+                    maze[shotY][shotX] === 0
+                ) {
+                    console.log(`Shot stopped at (${shotX}, ${shotY})`);
+                    clearInterval(interval); // Stop the shot
+                    drawMaze(); // Redraw the maze
+                    drawHunter(); // Redraw the hunter
+                    return;
+                }
+
+                // Redraw the maze and render the shot
+                drawMaze();
+                drawHunter();
+                drawShot(shotX, shotY);
+            }, 100); // Move the shot every 100ms
+            
+        } else {
+            console.log('No ammo left!');
+        }
+    };
+
+    function shootHunter() {
+        if (lastDirection) {
+            shoot(lastDirection); // Shoot in the last direction
+        } else {
+            console.log('No direction set for shooting!');
+        }
     }
 </script>
 {% endblock %}
