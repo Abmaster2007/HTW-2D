@@ -2,17 +2,16 @@
 
 {% block content %}
 <div id="gameArea" style="display: none;">
-    <canvas id="gameCanvas" width="1000" height="500" (window:resize)="onResize($event)" style="border:1px solid #000000;">
-    </canvas>
+    <canvas id="gameCanvas" width="1000" height="500" style="border:1px solid #000000;"></canvas>
+
     <div id="controls" style="text-align: center; margin-top: 10px;">
-        <button id="upButton" onclick="moveHunter('up')">Up</button><br>
-        <button id="leftButton" onclick="moveHunter('left')">Left</button>
-        <button id="downButton" onclick="moveHunter('down')">Down</button>
-        <button id="rightButton" onclick="moveHunter('right')">Right</button><br>
-        <button id="shootButton" onclick="shootHunter()">Shoot</button>
+        <button onclick="moveHunter('up')">Up</button><br>
+        <button onclick="moveHunter('left')">Left</button>
+        <button onclick="moveHunter('down')">Down</button>
+        <button onclick="moveHunter('right')">Right</button><br>
+        <button onclick="shootHunter()">Shoot</button>
     </div>
 </div>
-
 
 <div id="precautionScreen" style="display: block;">
     <h1>Precaution</h1>
@@ -32,212 +31,149 @@
     <button id="nextButton" onclick="startGame()">Start Game</button>
 </div>
 <script>
-    const backgroundAudio = document.getElementById('backgroundAudio');
-    backgroundAudio.src = "{{ url_for('static', filename='audio/8_bit_retro_forest.mp3') }}"; // Change the audio source for gameplay
-    backgroundAudio.play(); // Play the audio
-    backgroundAudio.loop = true; // Loop the audio
-
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    const tileSize = 50; // Size of each tile
-    const multiplier = 1; // Multiplier for the canvas size
+    const tileSize = 50;
 
-    // Set canvas size based on multiplier
-    canvas.width = 100 * tileSize * multiplier; // 100 tiles wide
-    canvas.height = 50 * tileSize * multiplier; // 50 tiles high
-
-    
     let maze = [];
-    let hunter = { x: 0, y: 0, ammo: 10 }; // Hunter's initial position and stats
-    let lastDirection = null; // Stores the last direction the hunter moved
+    let hunter = {};
+    let wumpus = {};
+    let bullets = []; // Array to track active bullets
+    let lastDirection = 'up'; // Track the last direction the hunter moved
 
-    // // Randomly place the player in a valid spot
-    // function placePlayer() {
-    //     let validPositionFound = false;
-
-    //     while (!validPositionFound) {
-    //         const randomX = Math.floor(Math.random() * maze[0].length);
-    //         const randomY = Math.floor(Math.random() * maze.length);
-
-    //         if (maze[randomY][randomX] === 1) { // Check if the tile is a path
-    //             player.x = randomX;
-    //             player.y = randomY;
-    //             validPositionFound = true;
-    //         }
-    //     }
-    // }
-
-    function placeHunter() {
-        let validPositionFound = false;
-
-        while (!validPositionFound) {
-            const randomX = Math.floor(Math.random() * maze[0].length);
-            const randomY = Math.floor(Math.random() * maze.length);
-
-            if (maze[randomY][randomX] === 1) { // Check if the tile is a path
-                hunter.x = randomX;
-                hunter.y = randomY;
-                validPositionFound = true;
-            }
-        }
-    }
-
-    // Fetch maze data from the backend
-    fetch('/generate_maze?multiplier=' + multiplier)
+    // Fetch initialized game state from the backend
+    fetch('/initialize')
         .then(response => response.json())
         .then(data => {
-            console.log(data); // Debugging: Log the fetched data
             maze = data.maze;
             hunter = data.hunter;
+            wumpus = data.wumpus;
 
             canvas.width = maze[0].length * tileSize;
             canvas.height = maze.length * tileSize;
 
-            placeHunter();
             drawMaze();
             drawHunter();
-        });
+            drawWumpus();
+        })
+        .catch(error => console.error('Error fetching game state:', error));
 
     function drawMaze() {
-        const visionRadius = 1.2; // Number of tiles visible around the hunter
+        const visionRadius = 5;
 
         for (let y = 0; y < maze.length; y++) {
             for (let x = 0; x < maze[y].length; x++) {
                 const distance = Math.sqrt((hunter.x - x) ** 2 + (hunter.y - y) ** 2);
-                if (distance <= visionRadius) {
-                    ctx.fillStyle = maze[y][x] === 1 ? 'white' : 'black'; // Path = white, Wall = black
-                } else {
-                    ctx.fillStyle = 'black'; // Tiles outside vision = black
-                }
+                ctx.fillStyle = distance <= visionRadius ? (maze[y][x] === 1 ? 'white' : 'black') : 'black';
                 ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
             }
         }
     }
 
-    // // Draw the player
-    // function drawPlayer() {
-    //     ctx.fillStyle = 'blue';
-    //     ctx.fillRect(player.x * tileSize, player.y * tileSize, tileSize, tileSize);
-    // }
-
-    // Draw the hunter
     function drawHunter() {
-        ctx.fillStyle = 'blue'; // Hunter's color
-        // ctx.fillRect(hunter.x * tileSize, hunter.y * tileSize, tileSize, tileSize);
+        ctx.fillStyle = 'blue';
         ctx.beginPath();
-        ctx.arc(hunter.x * tileSize + tileSize / 2, hunter.y * tileSize + tileSize / 2, tileSize / 3, 0, Math.PI * 2);
+        ctx.arc(hunter.x * tileSize + tileSize / 2, hunter.y * tileSize + tileSize / 2, tileSize / 2, 0, Math.PI * 2);
         ctx.fill();
-
-        // Display hunter's stats
-        ctx.font = '16px Arial';
-        ctx.fillStyle = 'white';
-        ctx.fillText(`Ammo: ${hunter.ammo}`, 10, 20);
+        ctx.closePath();
     }
 
-
-    // Move the player with arrow keys
-    document.addEventListener('keydown', (event) => {
-        let newX = hunter.x;
-        let newY = hunter.y;
-
-        switch (event.key.toLowerCase()) { // Convert key to lowercase for consistency
-            case 'w': // Move up
-                event.preventDefault();
-                if (newY > 0) {
-                    newY--;
-                }
-                lastDirection = 'up'; // Update last direction
-                break;
-            case 's': // Move down
-                event.preventDefault();
-                if (newY < maze.length - 1) {
-                    newY++;
-                }
-                lastDirection = 'down'; // Update last direction
-                break;
-            case 'a': // Move left
-                event.preventDefault();
-                if (newX > 0) {
-                    newX--;
-                }
-                lastDirection = 'left'; // Update last direction
-                break;
-            case 'd': // Move right
-                event.preventDefault();
-                if (newX < maze[0].length - 1) {
-                    newX++;
-                }
-                lastDirection = 'right'; // Update last direction
-                break;
-            case ' ': // Shoot arrow
-                event.preventDefault();
-                const direction = event.shiftKey ? 'up' : event.ctrlKey ? 'down' : event.altKey ? 'left' : 'right';
-                shoot(lastDirection);
-                return; // Exit the switch to avoid moving the hunter
-        }
-
-        function shoot(direction) {
-            if (hunter.ammo > 0) {
-                hunter.ammo--; // Reduce ammo by 1
-                console.log(`Hunter shot ${direction}. Remaining ammo: ${hunter.ammo}`);
-
-                let shotX = hunter.x;
-                let shotY = hunter.y;
-
-                const interval = setInterval(() => {
-                    // Move the shot in the specified direction
-                    switch (direction) {
-                        case 'up':
-                            shotY--;
-                            break;
-                        case 'down':
-                            shotY++;
-                            break;
-                        case 'left':
-                            shotX--;
-                            break;
-                        case 'right':
-                            shotX++;
-                            break;
-                    }
-
-                    // Check if the shot hits a wall or goes out of bounds
-                    if (
-                        shotY < 0 || shotY >= maze.length || 
-                        shotX < 0 || shotX >= maze[0].length || 
-                        maze[shotY][shotX] === 0
-                    ) {
-                        console.log(`Shot stopped at (${shotX}, ${shotY})`);
-                        clearInterval(interval); // Stop the shot
-                        drawMaze(); // Redraw the maze
-                        drawHunter(); // Redraw the hunter
-                        return;
-                    }
-
-                    // Redraw the maze and render the shot
-                    drawMaze();
-                    drawHunter();
-                    drawShot(shotX, shotY);
-                }, 100); // Move the shot every 100ms
-            } else {
-                console.log('No ammo left!');
-            }
-        }
-
-        // Check if the new position is a path
-        if (maze[newY] && maze[newY][newX] === 1) {
-            hunter.x = newX;
-            hunter.y = newY;
-            drawMaze(); // Redraw the maze
-            drawHunter(); // Redraw the hunter
-        }
-    });
-
-    function drawShot(x, y) {
-        ctx.fillStyle = 'red'; // Shot color
+    function drawWumpus() {
+        if (!wumpus || !wumpus.alive) return; // Ensure wumpus exists and is alive
+        ctx.fillStyle = wumpus.asleep ? 'purple' : 'red';
         ctx.beginPath();
-        ctx.arc(x * tileSize + tileSize / 2, y * tileSize + tileSize / 2, tileSize / 6, 0, Math.PI * 2);
+        ctx.arc(wumpus.x * tileSize + tileSize / 2, wumpus.y * tileSize + tileSize / 2, tileSize / 2, 0, Math.PI * 2);
         ctx.fill();
+        ctx.closePath();
+    }
+
+    function moveHunter(direction) {
+        fetch('/move_hunter', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ direction: direction })
+        })
+        .then(response => response.json())
+        .then(data => {
+            hunter = data.hunter;
+            drawMaze();
+            drawHunter();
+            drawWumpus();
+        })
+        .catch(error => console.error('Error moving hunter:', error));
+    }
+
+    function shootHunter() {
+        // Add a bullet to the bullets array
+        bullets.push({
+            x: hunter.x * tileSize + tileSize / 2, // Start at hunter's position
+            y: hunter.y * tileSize + tileSize / 2,
+            direction: lastDirection, // Shoot in the last direction the hunter moved
+        });
+
+        // Send the shooting request to the server
+        fetch('/shoot', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ direction: lastDirection }) // Use last direction
+        })
+        .then(response => response.json())
+        .then(data => {
+            console.log(data.result); // Log the result of the shot
+            hunter = data.hunter;
+            wumpus = data.wumpus;
+            drawMaze();
+            drawHunter();
+            drawWumpus();
+        })
+        .catch(error => console.error('Error handling shoot:', error));
+    }
+
+    function drawBullets() {
+        ctx.fillStyle = 'red'; // Bullet color
+        bullets.forEach((bullet, index) => {
+            // Move the bullet in its direction
+            if (bullet.direction === 'up') {
+                bullet.y -= 5; // Move upward
+            } else if (bullet.direction === 'down') {
+                bullet.y += 5; // Move downward
+            } else if (bullet.direction === 'left') {
+                bullet.x -= 5; // Move left
+            } else if (bullet.direction === 'right') {
+                bullet.x += 5; // Move right
+            }
+
+            // Check if the bullet hits a wall or the Wumpus
+            const mazeX = Math.floor(bullet.x / tileSize);
+            const mazeY = Math.floor(bullet.y / tileSize);
+
+            if (
+                maze[mazeY] && maze[mazeY][mazeX] === 0 || // Hits a wall
+                (mazeX === wumpus.x && mazeY === wumpus.y) // Hits the Wumpus
+            ) {
+                if (mazeX === wumpus.x && mazeY === wumpus.y) {
+                    wumpus.alive = false; // Kill the Wumpus
+                    console.log('Wumpus defeated!');
+                }
+                bullets.splice(index, 1); // Remove bullet from array
+            } else {
+                // Draw the bullet
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI * 2); // Bullet size
+                ctx.fill();
+                ctx.closePath();
+            }
+        });
+    }
+
+    // Update the game loop to include bullet rendering
+    function gameLoop() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+        drawMaze();
+        drawHunter();
+        drawWumpus();
+        drawBullets(); // Render bullets
+        requestAnimationFrame(gameLoop); // Continue the game loop
     }
 
     function showInstructions() {
@@ -253,107 +189,53 @@
     function startGame() {
         document.getElementById('storyScreen').style.display = 'none';
         document.getElementById('gameArea').style.display = 'block';
-        document.getElementById('htmlElement').style.backgroundColor = 'black'; // Change background color for gameplay
+        document.getElementById('htmlElement').style.backgroundColor = 'black';
 
-        // Start the game logic here
         drawMaze();
         drawHunter();
+        drawWumpus();
     }
 
-    function moveHunter(direction) {
-        let newX = hunter.x;
-        let newY = hunter.y;
+    document.addEventListener('keydown', (event) => {
+        const key = event.key.toLowerCase(); // Normalize key to lowercase
+        let direction = null;
 
-        switch (direction) {
-            case 'up':
-                if (newY > 0) {
-                    newY--;
-                }
-                lastDirection = 'up';
-                break;
-            case 'down':
-                if (newY < maze.length - 1) {
-                    newY++;
-                }
-                lastDirection = 'down';
-                break;
-            case 'left':
-                if (newX > 0) {
-                    newX--;
-                }
-                lastDirection = 'left';
-                break;
-            case 'right':
-                if (newX < maze[0].length - 1) {
-                    newX++;
-                }
-                lastDirection = 'right';
-                break;
+        if (key === 'w') {
+            direction = 'up';
+            lastDirection = 'up'; // Update last direction
+        } else if (key === 'a') {
+            direction = 'left';
+            lastDirection = 'left'; // Update last direction
+        } else if (key === 's') {
+            direction = 'down';
+            lastDirection = 'down'; // Update last direction
+        } else if (key === 'd') {
+            direction = 'right';
+            lastDirection = 'right'; // Update last direction
+        } else if (key === ' ') {
+            shootHunter(); // Trigger shooting logic
+            return; // Exit early for space bar
         }
 
-        // Check if the new position is a path
-        if (maze[newY] && maze[newY][newX] === 1) {
-            hunter.x = newX;
-            hunter.y = newY;
-            drawMaze();
-            drawHunter();
-        }
-    }
-
-    window.shoot = function(direction) {
-        if (hunter.ammo > 0) {
-            hunter.ammo--;
-            console.log(`Hunter shot ${direction}. Remaining ammo: ${hunter.ammo}`);
-            let shotX = hunter.x;
-            let shotY = hunter.y;
-
-            const interval = setInterval(() => {
-                // Move the shot in the specified direction
-                switch (direction) {
-                    case 'up':
-                        shotY--;
-                        break;
-                    case 'down':
-                        shotY++;
-                        break;
-                    case 'left':
-                        shotX--;
-                        break;
-                    case 'right':
-                        shotX++;
-                        break;
-                }
-
-                // Check if the shot hits a wall or goes out of bounds
-                if (
-                    shotY < 0 || shotY >= maze.length || 
-                    shotX < 0 || shotX >= maze[0].length || 
-                    maze[shotY][shotX] === 0
-                ) {
-                    console.log(`Shot stopped at (${shotX}, ${shotY})`);
-                    clearInterval(interval); // Stop the shot
-                    drawMaze(); // Redraw the maze
-                    drawHunter(); // Redraw the hunter
-                    return;
-                }
-
-                // Redraw the maze and render the shot
+        if (direction) {
+            fetch('/move_hunter', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ direction }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                hunter = data.hunter;
+                wumpus = data.wumpus;
                 drawMaze();
                 drawHunter();
-                drawShot(shotX, shotY);
-            }, 100); // Move the shot every 100ms
-            
-        } else {
-            console.log('No ammo left!');
+                drawWumpus();
+            })
+            .catch(error => console.error('Error handling movement:', error));
         }
-    };
+    });
 
-    function shootHunter() {
-        if (lastDirection) {
-            shoot(lastDirection); // Shoot in the last direction
-        } else {
-            console.log('No direction set for shooting!');
-        }
-    }
+    // Start the game loop
+    gameLoop();
 </script>
 {% endblock %}

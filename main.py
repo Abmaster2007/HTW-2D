@@ -10,51 +10,97 @@ class Maze:
         self.grid = [[0 for _ in range(width)] for _ in range(height)]  # 0 = wall, 1 = path
 
     def generate_maze(self):
-        stack = [(1, 1)]  # Start carving from the top-left corner
-        self.grid[1][1] = 1  # Mark the starting point as a path
+        def is_valid_cell(x, y):
+            return 0 <= x < self.width and 0 <= y < self.height and self.grid[y][x] == 0
 
-        while stack:
-            x, y = stack.pop()
+        def carve_path(x, y):
+            self.grid[y][x] = 1  # Mark the current cell as a path
             directions = [(0, -1), (0, 1), (-1, 0), (1, 0)]  # Up, Down, Left, Right
             random.shuffle(directions)  # Randomize directions
 
             for dx, dy in directions:
                 nx, ny = x + dx * 2, y + dy * 2  # Move two steps in the chosen direction
-                if 0 <= nx < self.width and 0 <= ny < self.height and self.grid[ny][nx] == 0:
+                if is_valid_cell(nx, ny):
                     self.grid[y + dy][x + dx] = 1  # Carve path between current and next cell
-                    self.grid[ny][nx] = 1  # Carve path at the next cell
-                    stack.append((nx, ny))  # Add the next cell to the stack
+                    carve_path(nx, ny)  # Recursively carve the next cell
+
+        # Start carving from the top-left corner
+        carve_path(1, 1)
 
     def get_maze(self):
         return self.grid
 
 class Hunter:
-    def __init__(self, x, y, ammo=5):
+    def __init__(self, x, y, ammo=10):
         self.x = x
         self.y = y
         self.ammo = ammo
 
     def move(self, direction, maze):
         new_x, new_y = self.x, self.y
-
-        if direction == "up" and self.y > 0:
+        if direction == "up" and self.y > 0 and maze[self.y - 1][self.x] == 1:
             new_y -= 1
-        elif direction == "down" and self.y < len(maze) - 1:
+        elif direction == "down" and self.y < len(maze) - 1 and maze[self.y + 1][self.x] == 1:
             new_y += 1
-        elif direction == "left" and self.x > 0:
+        elif direction == "left" and self.x > 0 and maze[self.y][self.x - 1] == 1:
             new_x -= 1
-        elif direction == "right" and self.x < len(maze[0]) - 1:
+        elif direction == "right" and self.x < len(maze[0]) - 1 and maze[self.y][self.x + 1] == 1:
             new_x += 1
 
-        # Check if the new position is a path
-        if maze[new_y][new_x] == 1:
-            self.x, self.y = new_x, new_y
+        self.x, self.y = new_x, new_y
 
-    def shoot(self):
+    def shoot(self, direction, maze):
         if self.ammo > 0:
-            self.ammo -= 1
-            return True  # Shot fired
-        return False  # No ammo left
+            self.ammo -= 1  # Reduce ammo count
+            dx, dy = 0, 0
+
+            # Determine shooting direction
+            if direction == "up":
+                dx, dy = 0, -1
+            elif direction == "down":
+                dx, dy = 0, 1
+            elif direction == "left":
+                dx, dy = -1, 0
+            elif direction == "right":
+                dx, dy = 1, 0
+
+            # Check if Wumpus is hit
+            x, y = self.x, self.y
+            while 0 <= x < len(maze[0]) and 0 <= y < len(maze):
+                if x == wumpus.x and y == wumpus.y:
+                    wumpus.alive = False  # Kill the Wumpus
+                    return "Wumpus defeated!"
+                if maze[y][x] == 0:  # Stop if hitting a wall
+                    break
+                x += dx
+                y += dy
+
+            return "Missed!"
+        return "No ammo left"
+
+
+class Wumpus:
+    def __init__(self, x, y, asleep=True):
+        self.x = x
+        self.y = y
+        self.asleep = asleep
+        self.alive = True
+
+    def move(self, hunter, maze):
+        if not self.alive:
+            return
+        dx = hunter.x - self.x
+        dy = hunter.y - self.y
+        if abs(dx) > abs(dy):
+            if dx > 0 and maze[self.y][self.x + 1] == 1:
+                self.x += 1
+            elif dx < 0 and maze[self.y][self.x - 1] == 1:
+                self.x -= 1
+        else:
+            if dy > 0 and maze[self.y + 1][self.x] == 1:
+                self.y += 1
+            elif dy < 0 and maze[self.y - 1][self.x] == 1:
+                self.y -= 1
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
@@ -183,6 +229,91 @@ def generate_maze():
     response = {"maze": maze.get_maze(), "hunter": {"x": hunter.x, "y": hunter.y, "ammo": hunter.ammo}}
     print(response)  # Debugging: Print the response to the console
     return jsonify(response)
+
+# Initialize game state
+maze = [[random.choice([0, 1]) for _ in range(21)] for _ in range(11)]
+hunter = Hunter(0, 0)  # Create an instance of the Hunter class
+wumpus = Wumpus(10, 10)  # Create an instance of the Wumpus class
+
+@app.route('/initialize', methods=['GET'])
+def initialize_game():
+    global maze, hunter, wumpus
+
+    # Generate a new maze
+    maze_obj = Maze(21, 11)
+    maze_obj.generate_maze()
+    maze = maze_obj.get_maze()
+
+    # Place hunter in a valid position
+    hunter = Hunter(0, 0)
+    while maze[hunter.y][hunter.x] != 1:
+        hunter.x, hunter.y = random.randint(0, 20), random.randint(0, 10)
+
+    # Place Wumpus in a valid position
+    wumpus = Wumpus(10, 10)
+    while maze[wumpus.y][wumpus.x] != 1 or (hunter.x == wumpus.x and hunter.y == wumpus.y):
+        wumpus.x, wumpus.y = random.randint(0, 20), random.randint(0, 10)
+
+    response = {
+        "maze": maze,
+        "hunter": {"x": hunter.x, "y": hunter.y, "ammo": hunter.ammo},
+        "wumpus": {"x": wumpus.x, "y": wumpus.y, "asleep": wumpus.asleep, "alive": wumpus.alive}
+    }
+    return jsonify(response)
+
+@app.route('/move_hunter', methods=['POST'])
+def move_hunter():
+    direction = request.json.get('direction')
+    hunter.move(direction, maze)
+    wumpus.move(hunter, maze)
+    return jsonify({
+        "hunter": {"x": hunter.x, "y": hunter.y, "ammo": hunter.ammo},
+        "wumpus": {"x": wumpus.x, "y": wumpus.y, "asleep": wumpus.asleep, "alive": wumpus.alive}
+    })
+
+@app.route('/shoot', methods=['POST'])
+def shoot():
+    direction = request.json.get('direction')  # Get shooting direction from the client
+    result = hunter.shoot(direction, maze)
+    return jsonify({
+        "result": result,
+        "hunter": {"x": hunter.x, "y": hunter.y, "ammo": hunter.ammo},
+        "wumpus": {"x": wumpus.x, "y": wumpus.y, "asleep": wumpus.asleep, "alive": wumpus.alive}
+    })
+
+@app.route('/handle_input', methods=['POST'])
+def handle_input():
+    key = request.json.get('key').lower()  # Get the key from the client request
+    direction = None
+
+    # Map WASD keys to directions
+    if key == 'w':
+        direction = 'up'
+    elif key == 'a':
+        direction = 'left'
+    elif key == 's':
+        direction = 'down'
+    elif key == 'd':
+        direction = 'right'
+    elif key == ' ':  # Space key for shooting
+        direction = 'shoot'
+
+    if direction == 'shoot':
+        result = hunter.shoot('up', maze)  # Example: shooting upward
+        return jsonify({
+            "result": result,
+            "hunter": {"x": hunter.x, "y": hunter.y, "ammo": hunter.ammo},
+            "wumpus": {"x": wumpus.x, "y": wumpus.y, "asleep": wumpus.asleep, "alive": wumpus.alive}
+        })
+    elif direction:
+        hunter.move(direction, maze)
+        wumpus.move(hunter, maze)
+        return jsonify({
+            "hunter": {"x": hunter.x, "y": hunter.y, "ammo": hunter.ammo},
+            "wumpus": {"x": wumpus.x, "y": wumpus.y, "asleep": wumpus.asleep, "alive": wumpus.alive}
+        })
+    else:
+        return jsonify({"error": "Invalid key"})
 
 if __name__ == '__main__':
     app.run(debug=True)
