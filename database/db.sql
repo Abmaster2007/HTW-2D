@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS leaderboard (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL,
+    time REAL NOT NULL,
+    difficulty TEXT NOT NULL
+);

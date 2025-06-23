@@ -31,7 +31,7 @@ class Maze:
         return self.grid
 
 class Hunter:
-    def __init__(self, x, y, ammo=10):
+    def __init__(self, x, y, ammo=5):
         self.x = x
         self.y = y
         self.ammo = ammo
@@ -87,27 +87,40 @@ class Wumpus:
         self.alive = True
 
     def move(self, hunter, maze):
-        if not self.alive:
+        if not self.alive or self.asleep:
             return
-        dx = hunter.x - self.x
-        dy = hunter.y - self.y
-        if abs(dx) > abs(dy):
-            if dx > 0 and maze[self.y][self.x + 1] == 1:
-                self.x += 1
-            elif dx < 0 and maze[self.y][self.x - 1] == 1:
-                self.x -= 1
-        else:
-            if dy > 0 and maze[self.y + 1][self.x] == 1:
-                self.y += 1
-            elif dy < 0 and maze[self.y - 1][self.x] == 1:
-                self.y -= 1
+        path = self.bfs((self.x, self.y), (hunter.x, hunter.y), maze)
+        if path and len(path) > 1:
+            self.x, self.y = path[1]
+    
+    def bfs(self, start, goal, maze):
+        width, height = len(maze[0]), len(maze)
+        queue = [(start, [start])]
+        visited = set()
+        visited.add(start)
+        while queue:
+            (x, y), path = queue.pop(0)
+            if (x, y) == goal:
+                return path
+            for dx, dy in [(-1,0),(1,0),(0,-1),(0,1)]:
+                nx, ny = x + dx, y + dy
+                if 0 <= nx < width and 0 <= ny < height and maze[ny][nx] == 1 and (nx, ny) not in visited:
+                    visited.add((nx, ny))
+                    queue.append(((nx, ny), path + [(nx, ny)]))
+        return None  # No path found
 
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
 @app.route('/')
 def index():
-    return render_template('Gamemenu.html')
+    conn = sqlite3.connect('HTW-2D/database/database.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT username, time, difficulty FROM leaderboard ORDER BY time ASC")
+    rows = cursor.fetchall()
+    conn.close()
+    return render_template('Gamemenu.html', leaderboard=rows)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -265,9 +278,9 @@ def initialize_game():
 def move_hunter():
     direction = request.json.get('direction')
     hunter.move(direction, maze)
-    wumpus.move(hunter, maze)
+    hunter_dead = (hunter.x == wumpus.x and hunter.y == wumpus.y and wumpus.alive)
     return jsonify({
-        "hunter": {"x": hunter.x, "y": hunter.y, "ammo": hunter.ammo},
+        "hunter": {"x": hunter.x, "y": hunter.y, "ammo": hunter.ammo, "dead": hunter_dead},
         "wumpus": {"x": wumpus.x, "y": wumpus.y, "asleep": wumpus.asleep, "alive": wumpus.alive}
     })
 
@@ -275,9 +288,23 @@ def move_hunter():
 def shoot():
     direction = request.json.get('direction')  # Get shooting direction from the client
     result = hunter.shoot(direction, maze)
+    # wake up the Wumpus if it was asleep
+    if wumpus.asleep:
+        wumpus.asleep = False
+    hunter_dead = (hunter.x == wumpus.x and hunter.y == wumpus.y and wumpus.alive)
     return jsonify({
         "result": result,
-        "hunter": {"x": hunter.x, "y": hunter.y, "ammo": hunter.ammo},
+        "hunter": {"x": hunter.x, "y": hunter.y, "ammo": hunter.ammo, "dead": hunter_dead},
+        "wumpus": {"x": wumpus.x, "y": wumpus.y, "asleep": wumpus.asleep, "alive": wumpus.alive}
+    })
+
+@app.route('/move_wumpus', methods=['POST'])
+def move_wumpus():
+    if not wumpus.asleep and wumpus.alive:
+        wumpus.move(hunter, maze)
+    hunter_dead = (hunter.x == wumpus.x and hunter.y == wumpus.y and wumpus.alive)
+    return jsonify({
+        "hunter": {"x": hunter.x, "y": hunter.y, "ammo": hunter.ammo, "dead": hunter_dead},
         "wumpus": {"x": wumpus.x, "y": wumpus.y, "asleep": wumpus.asleep, "alive": wumpus.alive}
     })
 
@@ -314,6 +341,39 @@ def handle_input():
         })
     else:
         return jsonify({"error": "Invalid key"})
+
+def update_leaderboard(username, time_taken, difficulty):
+    conn = sqlite3.connect('HTW-2D/database/database.db')
+    cursor = conn.cursor()
+    # Check if a better time exists
+    cursor.execute("SELECT time FROM leaderboard WHERE username=? AND difficulty=?", (username, difficulty))
+    row = cursor.fetchone()
+    if row is None or time_taken < float(row[0]):
+        if row is None:
+            cursor.execute("INSERT INTO leaderboard (username, time, difficulty) VALUES (?, ?, ?)", (username, time_taken, difficulty))
+        else:
+            cursor.execute("UPDATE leaderboard SET time=? WHERE username=? AND difficulty=?", (time_taken, username, difficulty))
+        conn.commit()
+    conn.close()
+
+@app.route('/submit_score', methods=['POST'])
+def submit_score():
+    data = request.json
+    username = session.get('username', 'Anonymous')
+    time_taken = float(data.get('time'))
+    difficulty = data.get('difficulty')
+    update_leaderboard(username, time_taken, difficulty)
+    return jsonify({"success": True})
+
+@app.route('/leaderboard')
+def leaderboard():
+    conn = sqlite3.connect('HTW-2D/database/database.db')
+    conn.row_factory = sqlite3.Row
+    cursor = conn.cursor()
+    cursor.execute("SELECT username, time, difficulty FROM leaderboard ORDER BY time ASC")
+    rows = cursor.fetchall()
+    conn.close()
+    return render_template('Leaderboard.html', leaderboard=rows)
 
 if __name__ == '__main__':
     app.run(debug=True)

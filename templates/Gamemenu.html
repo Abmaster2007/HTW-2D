@@ -25,7 +25,16 @@
         </div>
         <div id="leaderBoard">
             <h2>Leaderboard</h2>
-            <table>bruh</table>
+            <table>
+                <tr><th>Name</th><th>Time (s)</th><th>difficulty</th></tr>
+                {% for entry in leaderboard %}
+                    <tr>
+                        <td>{{ entry.username }}</td>
+                        <td>{{ entry.time }}</td>
+                        <td>{{ entry.difficulty }}</td>
+                    </tr>
+                {% endfor %}
+            </table>
         </div>
     </div>
 

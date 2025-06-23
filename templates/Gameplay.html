@@ -33,7 +33,12 @@
 <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
-    const tileSize = 50;
+    const tileSize = 100;
+
+    let startTime = null;
+    let endTime = null;
+    let gameEnded = false;
+    let difficulty = "Normal"; // Set this based on your difficulty selector
 
     let maze = [];
     let hunter = {};
@@ -73,13 +78,22 @@
     function drawHunter() {
         ctx.fillStyle = 'blue';
         ctx.beginPath();
-        ctx.arc(hunter.x * tileSize + tileSize / 2, hunter.y * tileSize + tileSize / 2, tileSize / 2, 0, Math.PI * 2);
+        ctx.arc(hunter.x * tileSize + tileSize / 2, hunter.y * tileSize + tileSize / 2, tileSize / 4, 0, Math.PI * 2);
         ctx.fill();
         ctx.closePath();
     }
 
     function drawWumpus() {
         if (!wumpus || !wumpus.alive) return; // Ensure wumpus exists and is alive
+    
+        const visionRadius = 5;
+        const distance = Math.abs(hunter.x - wumpus.x);
+        const distanceY = Math.abs(hunter.y - wumpus.y);
+
+        if (distance > visionRadius || distanceY > visionRadius) {
+            return; // Don't draw Wumpus if it's outside the hunter's vision radius
+        }
+
         ctx.fillStyle = wumpus.asleep ? 'purple' : 'red';
         ctx.beginPath();
         ctx.arc(wumpus.x * tileSize + tileSize / 2, wumpus.y * tileSize + tileSize / 2, tileSize / 2, 0, Math.PI * 2);
@@ -99,6 +113,7 @@
             drawMaze();
             drawHunter();
             drawWumpus();
+            checkEndState(); // Check end state after moving hunter
         })
         .catch(error => console.error('Error moving hunter:', error));
     }
@@ -125,6 +140,7 @@
             drawMaze();
             drawHunter();
             drawWumpus();
+            checkEndState(); // Check end state after shooting
         })
         .catch(error => console.error('Error handling shoot:', error));
     }
@@ -152,7 +168,6 @@
                 (mazeX === wumpus.x && mazeY === wumpus.y) // Hits the Wumpus
             ) {
                 if (mazeX === wumpus.x && mazeY === wumpus.y) {
-                    wumpus.alive = false; // Kill the Wumpus
                     console.log('Wumpus defeated!');
                 }
                 bullets.splice(index, 1); // Remove bullet from array
@@ -168,6 +183,7 @@
 
     // Update the game loop to include bullet rendering
     function gameLoop() {
+        if (gameEnded) return; // Stop the game loop if the game has ended
         ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
         drawMaze();
         drawHunter();
@@ -175,6 +191,22 @@
         drawBullets(); // Render bullets
         requestAnimationFrame(gameLoop); // Continue the game loop
     }
+
+    let wumpusInterval = setInterval(() => {
+        fetch('/move_wumpus', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ hunterX: hunter.x, hunterY: hunter.y })
+        })
+        .then(response => response.json())
+        .then(data => {
+            hunter = data.hunter;
+            wumpus = data.wumpus;
+            checkEndState(); // Check end state after moving Wumpus
+    })
+    .catch(error => console.error('Error moving Wumpus:', error));
+}, 1000); // Move Wumpus every 2 seconds
+    
 
     function showInstructions() {
         document.getElementById('precautionScreen').style.display = 'none';
@@ -190,13 +222,71 @@
         document.getElementById('storyScreen').style.display = 'none';
         document.getElementById('gameArea').style.display = 'block';
         document.getElementById('htmlElement').style.backgroundColor = 'black';
+        document.getElementById('pageTitle').style.display = 'none';
+
+        startGameTimer(); // Start the game timer
 
         drawMaze();
         drawHunter();
         drawWumpus();
     }
 
-    document.addEventListener('keydown', (event) => {
+    function startGameTimer() {
+        startTime = Date.now();
+    }
+
+    function endGameTimer() {
+        endTime = Date.now();
+        return ((endTime - startTime) / 1000).toFixed(2); // seconds
+    }
+
+    function showEndScreen(win) {
+        gameEnded = true;
+        clearInterval(wumpusInterval); // Stop the Wumpus movement interval
+        document.removeEventListener('keydown', handleKeyDown); // Stop listening for key events
+        const gameArea = document.getElementById('gameArea');
+        gameArea.style.display = 'none';
+        const endScreen = document.createElement('div');
+        endScreen.id = 'endScreen';
+        endScreen.style.textAlign = 'center';
+        endScreen.style.marginTop = '50px';
+        const timeTaken = endGameTimer();
+        endScreen.innerHTML = `
+            <h1>${win ? "You Won!" : "Game Over"}</h1>
+            <p>Time: <span id="finalTime">${timeTaken}</span> seconds</p>
+            <button onclick="tryAgain()">Try Again</button>
+            <button onclick="goToMenu()">Back to Difficulty Selector</button>
+        `;
+        document.body.appendChild(endScreen);
+
+        if (win) {
+            // Submit score to leaderboard
+            fetch('/submit_score', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ time: timeTaken, difficulty: difficulty })
+            });
+        }
+    }
+
+    function tryAgain() {
+        window.location.reload();
+    }
+
+    function goToMenu() {
+        window.location.href = '/'; // Or your difficulty selector route
+    }
+
+    function checkEndState() {
+        // if (gameEnded) return;
+        if (!wumpus.alive) {
+            showEndScreen(true);
+        } else if (hunter.dead) {
+            showEndScreen(false);
+        }
+    }
+
+    function handleKeyDown(event) {
         const key = event.key.toLowerCase(); // Normalize key to lowercase
         let direction = null;
 
@@ -230,10 +320,12 @@
                 drawMaze();
                 drawHunter();
                 drawWumpus();
+                checkEndState();
             })
             .catch(error => console.error('Error handling movement:', error));
         }
-    });
+    }
+    document.addEventListener('keydown', handleKeyDown);
 
     // Start the game loop
     gameLoop();
