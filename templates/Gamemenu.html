@@ -1,14 +1,15 @@
 {% extends "Index.html" %}
 
 {% block content %}
+    {% set difficulty_labels = {'easy': 'Baby', 'medium': 'average', 'hard': 'Overkill'} %}
     <div id="gameMenu">
         <div id="menuButtons">
             {% if session.get('username') %}
                 <a href="#"><button id="startGameButton">Start game</button></a>
                 <select name="difficulty" id="difficultySelector">
-                    <option value="easy">Easy</option>
-                    <option value="medium">Medium</option>
-                    <option value="hard">Hard</option>
+                    <option value="easy">Baby</option>
+                    <option value="medium">Amature</option>
+                    <option value="hard">Overkill</option>
                 </select>
             {% else %}
                 <button onclick="loadPage('{{ url_for('login') }}')">Login</button>
@@ -31,7 +32,7 @@
                     <tr>
                         <td>{{ entry.username }}</td>
                         <td>{{ entry.time }}</td>
-                        <td>{{ entry.difficulty }}</td>
+                        <td>{{ difficulty_labels.get(entry.difficulty, entry.difficulty) }}</td>
                     </tr>
                 {% endfor %}
             </table>
@@ -39,48 +40,47 @@
     </div>
 
     <script>
-        document.getElementById('startGameButton').addEventListener('click', function(e) {
-            e.preventDefault(); // Prevent default action
-            const selectedDifficulty = document.getElementById('difficultySelector').value;
-            console.log('Starting game with difficulty:', selectedDifficulty);
-            // Redirect to the game page
-            window.location.href = "{{ url_for('gameplay') }}";
-        });
+        // Start Game button logic
+        const startGameBtn = document.getElementById('startGameButton');
+        if (startGameBtn) {
+            startGameBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                const bgAudio = document.getElementById('backgroundAudio');
+                if (bgAudio) {
+                    bgAudio.src = "{{ url_for('static', filename='audio/8_bit_retro_forest.mp3') }}";
+                    bgAudio.play();
+                }
+                const selectedDifficulty = document.getElementById('difficultySelector').value;
+                console.log('Starting game with difficulty:', selectedDifficulty);
+                window.location.href = `/gameplay?difficulty=${selectedDifficulty}`;
+            });
+        }
 
-    document.getElementById('startGameButton').addEventListener('click', function(e) {
-        e.preventDefault();
-        const selectedDifficulty = document.getElementById('difficultySelector').value;
-        window.location.href = `/gameplay?difficulty=${selectedDifficulty}`;
-    });
-
-
-        document.getElementById('difficultySelector').addEventListener('change', function() {
-            const selectedDifficulty = this.value;
-            console.log('Selected difficulty:', selectedDifficulty);
-            // You can add logic here to handle the difficulty change
-            if (selectedDifficulty === 'easy') {
-                // Set game parameters for easy difficulty
-                document.getElementById('htmlElement').style.backgroundColor = 'rgb(49, 49, 49)'; // Example: change background color for easy difficulty
-                document.getElementById('backgroundAudio').src = "{{ url_for('static', filename='audio/8_bit_menu.mp3') }}"; // Change audio for easy difficulty
-                document.getElementById('backgroundAudio').play(); // Play the new audio
-                document.getElementById('backgroundAudio').loop = true; // Ensure it loops
-                console.log('Easy difficulty selected');
-            } else if (selectedDifficulty === 'medium') {
-                // Set game parameters for medium difficulty
-                document.getElementById('htmlElement').style.backgroundColor = 'rgb(36, 36, 36)'; // Example: change background color for medium difficulty
-                document.getElementById('backgroundAudio').src = "{{ url_for('static', filename='audio/8_bit_menu.mp3') }}"; // Change audio for medium difficulty
-                document.getElementById('backgroundAudio').play(); // Play the new audio
-                document.getElementById('backgroundAudio').loop = true; // Ensure it loops
-                console.log('Medium difficulty selected');
-            } else if (selectedDifficulty === 'hard') {
-                // Set game parameters for hard difficulty
-                document.getElementById('htmlElement').style.backgroundColor = 'rgb(64, 1, 1)'; // Example: change background color for hard difficulty
-                document.getElementById('backgroundAudio').src = "{{ url_for('static', filename='audio/8_bit_menu_eerie.mp3') }}"; // Change audio for hard difficulty
-                document.getElementById('backgroundAudio').play(); // Play the new audio
-                document.getElementById('backgroundAudio').loop = true; // Ensure it loops
-                console.log('Hard difficulty selected');
-            }
-        });
+        // Difficulty selector logic
+        const difficultySelector = document.getElementById('difficultySelector');
+        if (difficultySelector) {
+            difficultySelector.addEventListener('change', function() {
+                const selectedDifficulty = this.value;
+                console.log('Selected difficulty:', selectedDifficulty);
+                // Only run these if the elements exist
+                const htmlElem = document.getElementById('htmlElement');
+                const bgAudio = document.getElementById('backgroundAudio');
+                if (htmlElem && bgAudio) {
+                    if (selectedDifficulty === 'easy') {
+                        htmlElem.style.backgroundColor = 'rgb(49, 49, 49)';
+                        bgAudio.src = "{{ url_for('static', filename='audio/8_bit_menu.mp3') }}";
+                    } else if (selectedDifficulty === 'medium') {
+                        htmlElem.style.backgroundColor = 'rgb(36, 36, 36)';
+                        bgAudio.src = "{{ url_for('static', filename='audio/8_bit_menu.mp3') }}";
+                    } else if (selectedDifficulty === 'hard') {
+                        htmlElem.style.backgroundColor = 'rgb(64, 1, 1)';
+                        bgAudio.src = "{{ url_for('static', filename='audio/8_bit_menu_eerie.mp3') }}";
+                    }
+                    bgAudio.play();
+                    bgAudio.loop = true;
+                }
+            });
+        }
     </script>
 
 {% endblock %}

@@ -1,6 +1,8 @@
 {% extends "index.html" %}
 
 {% block content %}
+<audio id="gameplayAudio" src="{{ url_for('static', filename='audio/8_bit_retro_forest.mp3') }}" loop autoplay></audio>
+
 <div id="gameArea" style="display: none;">
     <canvas id="gameCanvas" width="1000" height="500" style="border:1px solid #000000;"></canvas>
     <div id="controls" style="text-align: center; margin-top: 10px;">
@@ -31,6 +33,19 @@
     <button id="nextButton" onclick="startGame()">Start Game</button>
 </div>
 <script defer>
+    // Pause menu audio immediately when this script loads
+    const bgAudio = document.getElementById('backgroundAudio');
+    if (bgAudio) {
+        bgAudio.pause();
+        bgAudio.currentTime = 0;
+    }
+    // Play gameplay audio
+    const gameplayAudio = document.getElementById('gameplayAudio');
+    if (gameplayAudio) {
+        gameplayAudio.currentTime = 0;
+        gameplayAudio.play();
+    }
+
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const tileSize = 100;
@@ -53,6 +68,9 @@
 
     let wumpusInterval = null;
     let gameLoopStarted = false;
+
+    let bats = [];
+    let pits = [];
 
     function drawMaze() {
         for (let y = 0; y < maze.length; y++) {
@@ -112,10 +130,42 @@
         });
     }
 
+    // Draw Super Bats
+    function drawBats() {
+        bats.forEach(bat => {
+            const distance = Math.sqrt((hunter.x - bat.x) ** 2 + (hunter.y - bat.y) ** 2);
+            if (distance <= visionRadius) {
+                ctx.fillStyle = 'orange';
+                ctx.beginPath();
+                ctx.arc(bat.x * tileSize + tileSize / 2, bat.y * tileSize + tileSize / 2, tileSize / 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.closePath();
+            }
+        });
+    }
+
+    // Draw Bottomless Pits
+    function drawPits() {
+        pits.forEach(pit => {
+            const distance = Math.sqrt((hunter.x - pit.x) ** 2 + (hunter.y - pit.y) ** 2);
+            if (distance <= visionRadius) {
+                ctx.fillStyle = 'black';
+                ctx.beginPath();
+                ctx.arc(pit.x * tileSize + tileSize / 2, pit.y * tileSize + tileSize / 2, tileSize / 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = 'gray';
+                ctx.stroke();
+                ctx.closePath();
+            }
+        });
+    }
+
     function gameLoop() {
         if (gameEnded) return;
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         drawMaze();
+        drawPits();
+        drawBats();
         drawHunter();
         drawWumpus();
         drawBullets();
@@ -126,7 +176,11 @@
         maze = data.maze || maze;
         hunter = data.hunter || hunter;
         wumpus = data.wumpus || wumpus;
+        bats = data.bats || bats;
+        pits = data.pits || pits;
         drawMaze();
+        drawPits();
+        drawBats();
         drawHunter();
         drawWumpus();
         document.getElementById('ammoValue').textContent = hunter.ammo;
@@ -173,7 +227,11 @@
         if (!wumpus.alive) {
             showEndScreen(true);
         } else if (hunter.dead) {
-            showEndScreen(false);
+            if (hunter.fell) {
+                showEndScreen(false, "You fell into a bottomless pit!");
+            } else {
+                showEndScreen(false);
+            }
         }
     }
 
@@ -267,7 +325,7 @@
         return ((endTime - startTime) / 1000).toFixed(2);
     }
 
-    function showEndScreen(win) {
+    function showEndScreen(win, customMessage) {
         gameEnded = true;
         if (wumpusInterval) clearInterval(wumpusInterval);
         document.removeEventListener('keydown', handleKeyDown);
@@ -279,6 +337,7 @@
         const timeTaken = endGameTimer();
         endScreen.innerHTML = `
             <h1>${win ? "You Won!" : "Game Over"}</h1>
+            ${customMessage ? `<p>${customMessage}</p>` : ""}
             <p>Time: <span id="finalTime">${timeTaken}</span> seconds</p>
             <button onclick="tryAgain()">Try Again</button>
             <button onclick="goToMenu()">Back to Difficulty Selector</button>

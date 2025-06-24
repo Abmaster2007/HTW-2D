@@ -333,3 +333,67 @@ canvas {
     background-color: rgb(53, 2, 2);
     box-shadow:inset 0 0 5px rgba(255, 255, 255, 0.5);
 }
+
+#leaderBoard table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    font-size: 16px;
+}
+
+#leaderBoard th, #leaderBoard td {
+    padding: 6px 10px;
+    text-align: left;
+    border-bottom: 1px solid #444;
+}
+
+#leaderBoard th {
+    font-weight: bold;
+    font-size: 18px;
+    color: #fff;
+    background: #222;
+    letter-spacing: 1px;
+}
+
+#leaderBoard tr:last-child td {
+    border-bottom: none;
+}
+
+#leaderBoard tr:nth-child(even) td {
+    background-color: #232323;
+}
+
+#leaderBoard tr:hover td {
+    background-color: #333;
+}
+
+#leaderBoard {
+    border-radius: 8px;
+    box-shadow: 0 0 16px rgba(255,255,255,0.08);
+    padding: 20px 30px;
+    min-width: 260px;
+}
+
+#leaderBoard h2, #leaderBoard .leaderboard-title {
+    margin-bottom: 12px;
+    font-size: 22px;
+    font-weight: bold;
+    letter-spacing: 1px;
+    color: #fff;
+    text-align: center;
+}
+#leaderBoard {
+    overflow: hidden;
+    box-sizing: border-box;
+}
+
+#leaderBoard table {
+    table-layout: fixed;
+    word-break: break-all;
+}
+
+#leaderBoard th, #leaderBoard td {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}

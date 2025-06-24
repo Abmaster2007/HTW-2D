@@ -109,6 +109,28 @@ class Wumpus:
                     queue.append(((nx, ny), path + [(nx, ny)]))
         return None  # No path found
 
+class SuperBat:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def transport(self, entity, maze):
+        # entity: Hunter or Wumpus
+        valid_cells = [(x, y) for y in range(len(maze)) for x in range(len(maze[0])) if maze[y][x] == 1]
+        new_x, new_y = random.choice(valid_cells)
+        entity.x = new_x
+        entity.y = new_y
+        return (new_x, new_y)
+
+class BottomlessPit:
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+    def check_fall(self, hunter):
+        # If hunter steps on the pit, he dies
+        return hunter.x == self.x and hunter.y == self.y
+
 app = Flask(__name__)
 app.secret_key = 'your_secret_key'
 
@@ -240,9 +262,13 @@ def generate_maze():
 maze = [[random.choice([0, 1]) for _ in range(21)] for _ in range(11)]
 hunter = Hunter(0, 0)  # Create an instance of the Hunter class
 wumpus = Wumpus(10, 10)  # Create an instance of the Wumpus class
+superbats = []  # List to store SuperBat instances
+pits = []  # List to store BottomlessPit instances
 
 @app.route('/initialize', methods=['GET'])
 def initialize_game():
+    global maze, hunter, wumpus, superbats, pits
+
     # Use session values or defaults
     hunter_ammo = session.get('hunter_ammo')
     vision_radius = session.get('vision_radius')
@@ -273,10 +299,21 @@ def initialize_game():
     wumpus_x, wumpus_y = random.choice(wumpus_cells)
     wumpus = Wumpus(wumpus_x, wumpus_y, asleep=True)
 
+    # Place bats and pits
+    valid_cells = [(x, y) for y in range(height) for x in range(width) if maze[y][x] == 1 and (x, y) != (hunter.x, hunter.y) and (x, y) != (wumpus.x, wumpus.y)]
+    num_bats = session.get('num_bats', 2)
+    num_pits = session.get('num_pits', 2)
+    bat_positions = random.sample(valid_cells, min(num_bats, len(valid_cells)))
+    pit_positions = random.sample([cell for cell in valid_cells if cell not in bat_positions], min(num_pits, len(valid_cells) - len(bat_positions)))
+    superbats = [SuperBat(x, y) for (x, y) in bat_positions]
+    pits = [BottomlessPit(x, y) for (x, y) in pit_positions]
+
     response = {
         "maze": maze,
         "hunter": {"x": hunter.x, "y": hunter.y, "ammo": hunter.ammo},
         "wumpus": {"x": wumpus.x, "y": wumpus.y, "asleep": wumpus.asleep, "alive": wumpus.alive},
+        "bats": [{"x": bat.x, "y": bat.y} for bat in superbats],
+        "pits": [{"x": pit.x, "y": pit.y} for pit in pits],
         "vision_radius": vision_radius,
         "wumpus_speed": wumpus_speed,
         "wumpus_aggressive": wumpus_aggressive,
@@ -288,10 +325,26 @@ def initialize_game():
 def move_hunter():
     direction = request.json.get('direction')
     hunter.move(direction, maze)
+    # Check for bottomless pit
+    for pit in pits:
+        if pit.check_fall(hunter):
+            hunter_dead = True
+            return jsonify({
+                "hunter": {"x": hunter.x, "y": hunter.y, "ammo": hunter.ammo, "dead": True, "fell": True},
+                "wumpus": {"x": wumpus.x, "y": wumpus.y, "asleep": wumpus.asleep, "alive": wumpus.alive}
+            })
+    # Check for superbat
+    for bat in superbats:
+        if hunter.x == bat.x and hunter.y == bat.y:
+            bat.transport(hunter, maze)
+            break  # Only transport once per move
+
     hunter_dead = (hunter.x == wumpus.x and hunter.y == wumpus.y and wumpus.alive)
     return jsonify({
         "hunter": {"x": hunter.x, "y": hunter.y, "ammo": hunter.ammo, "dead": hunter_dead},
-        "wumpus": {"x": wumpus.x, "y": wumpus.y, "asleep": wumpus.asleep, "alive": wumpus.alive}
+        "wumpus": {"x": wumpus.x, "y": wumpus.y, "asleep": wumpus.asleep, "alive": wumpus.alive},
+        "bats": [{"x": bat.x, "y": bat.y} for bat in superbats],
+        "pits": [{"x": pit.x, "y": pit.y} for pit in pits]
     })
 
 @app.route('/shoot', methods=['POST'])
@@ -312,10 +365,17 @@ def shoot():
 def move_wumpus():
     if not wumpus.asleep and wumpus.alive:
         wumpus.move(hunter, maze)
+        # Check for superbat (wumpus can be moved by bats)
+        for bat in superbats:
+            if wumpus.x == bat.x and wumpus.y == bat.y:
+                bat.transport(wumpus, maze)
+                break
     hunter_dead = (hunter.x == wumpus.x and hunter.y == wumpus.y and wumpus.alive)
     return jsonify({
         "hunter": {"x": hunter.x, "y": hunter.y, "ammo": hunter.ammo, "dead": hunter_dead},
-        "wumpus": {"x": wumpus.x, "y": wumpus.y, "asleep": wumpus.asleep, "alive": wumpus.alive}
+        "wumpus": {"x": wumpus.x, "y": wumpus.y, "asleep": wumpus.asleep, "alive": wumpus.alive},
+        "bats": [{"x": bat.x, "y": bat.y} for bat in superbats],
+        "pits": [{"x": pit.x, "y": pit.y} for pit in pits]
     })
 
 @app.route('/handle_input', methods=['POST'])
@@ -366,18 +426,24 @@ def gameplay():
         vision_radius = 3
         wumpus_speed = 2000
         wumpus_aggressive = False
+        num_bats = 2
+        num_pits = 2
     elif difficulty == 'medium':
         multiplier = 2
         hunter_ammo = 3
         vision_radius = 2
         wumpus_speed = 1500
         wumpus_aggressive = False
+        num_bats = 4
+        num_pits = 4
     elif difficulty == 'hard':
         multiplier = 3
         hunter_ammo = 1
         vision_radius = 1
-        wumpus_speed = 1000
+        wumpus_speed = 500
         wumpus_aggressive = True
+        num_bats = 10
+        num_pits = 10
 
     session['hunter_ammo'] = hunter_ammo
     session['vision_radius'] = vision_radius
@@ -385,8 +451,18 @@ def gameplay():
     session['wumpus_aggressive'] = wumpus_aggressive
     session['difficulty'] = difficulty
     session['multiplier'] = multiplier
+    session['num_bats'] = num_bats
+    session['num_pits'] = num_pits
 
-    return render_template('Gameplay.html', hunter_ammo=hunter_ammo, vision_radius=vision_radius, wumpus_speed=wumpus_speed, wumpus_aggressive=wumpus_aggressive, difficulty=difficulty, multiplier=multiplier)
+    return render_template(
+        'Gameplay.html',
+        hunter_ammo=hunter_ammo,
+        vision_radius=vision_radius,
+        wumpus_speed=wumpus_speed,
+        wumpus_aggressive=wumpus_aggressive,
+        difficulty=difficulty,
+        multiplier=multiplier
+    )
 
 
 def update_leaderboard(username, time_taken, difficulty):
