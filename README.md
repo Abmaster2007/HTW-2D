@@ -5,9 +5,9 @@
 * [X] ~~*1: The menu should have a play button that lets the player start the game if they have an account.*~~ [2025-05-29] 
 * [X] ~~*2: The menu should have a login button under that leads to the login page.*~~ [2025-05-29]
 * [X] ~~*3: The menu should have a signup button under that takes the user to the signup page.*~~ [2025-05-29]
-* [ ] 4: The menu should have a leaderboard on the left that displays the "user:difficulty:time" from either descending/ascending order for time and sorted by a single difficulty.
+* [X] ~~*4: The menu should have a leaderboard on the left that displays the "user:difficulty:time" from either descending/ascending order for time and sorted by a single difficulty.*~~ [2025-06-24]
 * [ ] 5: The menu should have a background around the menu that plays the animation of the main character getting chased by the wumpus.
-* [ ] 6: In the bottom left of the main menu, there should be a text that says "Logged in: {user}" when logged in or signed up that should be boxed in.
+* [X] ~~*6: In the bottom left of the main menu, there should be a text that says "Logged in: {user}" when logged in or signed up that should be boxed in.*~~ [2025-06-24]
 * [X] ~~*7: The menu should be centered in the middle of the screen that is enclosed in a box.*~~ [2025-05-29]
 * [X] ~~*8: The menu should have a difficulty button between the login and play button that modifies the behaviour of the enemies and the main character, ranged from Easy, Normal, and Hard.*~~ [2025-05-29]
 * [X] ~~*9: The menu should have a logout button for the user to logout of the account.*~~ [2025-06-02]
@@ -15,35 +15,34 @@
 # 1. The game
 * [X] ~~*1.1: If the user is logged in, start the game. Else, tell the player that they do not have an account signed in and lead the player to the login page.*~~ [2025-06-16]
 * [X] ~~*1.2: The game should be displayed in a rectangle box in the center of the screen.*~~ [2025-06-16]
-* [X] ~~*1.3: The game should display the cautions such as being a scary game and loud noises and has a button to continue to the next screen*~~ [2025-06-16]
+* [X] ~~*1.3: The game should display the cautions such as being a scary game and loud noises and has a button to continue to the next screen*~~ [2026-06-16]
 * [X] ~~*1.4: The game should then display the controls of the game such as movement, actions, and rules and has a button to continue to the next screen*~~ [2025-06-16]
 * [X] ~~*1.5: The game should then display the story of the game and has a button to continue to the next screen.*~~ [2025-06-16]
 * [ ] 1.6: The game should generate the cave in the shape of a dodecahedron.
 * [X] ~~*1.7: The game should put the main character in a random area that does not occupy the same spot as the wumpus.*~~ [2025-06-16]
-* [ ] 1.8: The game should put the wumpus in a random area that does not occupy the same spot as the main character.
+* [X] ~~*1.8: The game should put the wumpus in a random area that does not occupy the same spot as the main character.*~~ [2025-06-24]
 * [ ] 1.9: The game should put 'n' amount of bottomless pits in random areas that does not occupy both the main character and the wumpus.
 * [ ] 1.10: The game should put 'n' amount of superbats in random areas that does not occupy the main character, wumpus, and bottomless pits.
-* [ ] 1.10: The game should limit the main character's vision to 3 viewable paths that shows the user where can they go.
+* [X] ~~*1.10: The game should limit the main character's vision to 3 viewable paths that shows the user where can they go.*~~ [2025-06-24]
 * [ ] 1.11: The game should give the user options on what he can do such as "Move" and "Shoot" and give cues on whether the wumpus, bottomless pit or superbat is nearby.
-* [ ] 1.12: When the game is started, set the game's status to True and start the timer.
+* [X] ~~*1.12: When the game is started, set the game's status to True and start the timer.*~~ [2025-06-24]
 
 # 1.7 The main character
 * [X] ~~*1.7.1: The main character should have 'n' arrows.*~~ [2025-06-16]
 * [ ] 1.7.2: The main character should choose how many rooms for the arrow to shoot through.
 * [ ] 1.7.3: If the chosen points are connected with each other, shoot in that path. Else, shoot in a random path with the given amount of rooms.
-* [ ] 1.7.4: The main character should get rid of 1 arrow when used.
+* [X] ~~*1.7.4: The main character should get rid of 1 arrow when used.*~~ [2025-06-24]
 * [ ] 1.7.5: The main character should be able to move in one of the 3 spaces
-* [ ] 1.7.6: If that space is valid, move to that spot. Else, tell the user that this space is not valid.
+* [X] ~~*1.7.6: If that space is valid, move to that spot. Else, tell the user that this space is not valid.*~~ [2025-06-24]
 * [ ] 1.7.7: If that space has a superbat, move the player to a random spot of the cave. Else, check the next condition
 * [ ] 1.7.8: If that space has a bottomless pit, set the game's status to False, telling the user that they falled into the pit, discarding the timer.
 * [ ] 1.7.9: If the main character has no arrows, set the game's status to False, telling 
 
 # 1.8 The wumpus
-* [ ] 1.8.1: The wumpus should be asleep as default when started.
-* [ ] 1.8.2: The wumpus should be able to wake up if an arrow is shot and missed as a boolean.
-* [ ] 1.8.3: If the wumpus is awake, start moving to the main character using an algorithm as a delay using an algorithm. Else, stay asleep in the same spot.
+* [X] ~~*1.8.1: The wumpus should be asleep as default when started.*~~ [2025-06-24]
+* [X] ~~*1.8.2: The wumpus should be able to wake up if an arrow is shot and missed as a boolean.*~~ [2025-06-24]
+* [X] ~~*1.8.3: If the wumpus is awake, start moving to the main character using an algorithm as a delay using an algorithm. Else, stay asleep in the same spot.*~~ [2025-06-24]
 * [ ] 1.8.4: If the wumpus was shot/fall into the pit, set the game's status to False, telling the user that they killed the wumpus/wumpus fell into the pit from a superbat, ending the timer and send it to the leaderboard if the player killed it.
-* [ ] 1.8.4: If the wumpus was shot/fall into the pit, set the game's status to False, telling the user that they killed the wumpus/wumpus fell into the pit from a superbat, ending the timer an
 
 # 1.9 Bottomless pit
 * [ ] 1.9.1: The bottomless pit should be stationary

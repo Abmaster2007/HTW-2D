@@ -3,13 +3,13 @@
 {% block content %}
 <div id="gameArea" style="display: none;">
     <canvas id="gameCanvas" width="1000" height="500" style="border:1px solid #000000;"></canvas>
-
     <div id="controls" style="text-align: center; margin-top: 10px;">
         <button onclick="moveHunter('up')">Up</button><br>
         <button onclick="moveHunter('left')">Left</button>
         <button onclick="moveHunter('down')">Down</button>
         <button onclick="moveHunter('right')">Right</button><br>
         <button onclick="shootHunter()">Shoot</button>
+        <div id="ammoCounter" style="margin-top:10px;">Ammo: <span id="ammoValue"></span></div>
     </div>
 </div>
 
@@ -30,7 +30,7 @@
     <p>You are a hunter trapped in a mysterious maze. Your goal is to find and defeat the Wumpus lurking in the shadows. Be careful, as the maze is full of dangers!</p>
     <button id="nextButton" onclick="startGame()">Start Game</button>
 </div>
-<script>
+<script defer>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
     const tileSize = 100;
@@ -38,34 +38,23 @@
     let startTime = null;
     let endTime = null;
     let gameEnded = false;
-    let difficulty = "Normal"; // Set this based on your difficulty selector
-
     let maze = [];
     let hunter = {};
     let wumpus = {};
-    let bullets = []; // Array to track active bullets
-    let lastDirection = 'up'; // Track the last direction the hunter moved
+    let bullets = [];
+    let lastDirection = 'up';
 
-    // Fetch initialized game state from the backend
-    fetch('/initialize')
-        .then(response => response.json())
-        .then(data => {
-            maze = data.maze;
-            hunter = data.hunter;
-            wumpus = data.wumpus;
+    let hunterAmmo = {{ hunter_ammo }};
+    let visionRadius = {{ vision_radius }};
+    let wumpusSpeed = {{ wumpus_speed }};
+    let wumpusAggressive = {{ wumpus_aggressive|tojson }};
+    let difficulty = "{{ difficulty }}";
+    multiplier = {{ multiplier }};
 
-            canvas.width = maze[0].length * tileSize;
-            canvas.height = maze.length * tileSize;
-
-            drawMaze();
-            drawHunter();
-            drawWumpus();
-        })
-        .catch(error => console.error('Error fetching game state:', error));
+    let wumpusInterval = null;
+    let gameLoopStarted = false;
 
     function drawMaze() {
-        const visionRadius = 5;
-
         for (let y = 0; y < maze.length; y++) {
             for (let x = 0; x < maze[y].length; x++) {
                 const distance = Math.sqrt((hunter.x - x) ** 2 + (hunter.y - y) ** 2);
@@ -84,21 +73,64 @@
     }
 
     function drawWumpus() {
-        if (!wumpus || !wumpus.alive) return; // Ensure wumpus exists and is alive
-    
-        const visionRadius = 5;
+        if (!wumpus || !wumpus.alive) return;
         const distance = Math.abs(hunter.x - wumpus.x);
         const distanceY = Math.abs(hunter.y - wumpus.y);
-
-        if (distance > visionRadius || distanceY > visionRadius) {
-            return; // Don't draw Wumpus if it's outside the hunter's vision radius
-        }
-
+        if (distance > visionRadius || distanceY > visionRadius) return;
         ctx.fillStyle = wumpus.asleep ? 'purple' : 'red';
         ctx.beginPath();
         ctx.arc(wumpus.x * tileSize + tileSize / 2, wumpus.y * tileSize + tileSize / 2, tileSize / 2, 0, Math.PI * 2);
         ctx.fill();
         ctx.closePath();
+    }
+
+    function drawBullets() {
+        ctx.fillStyle = 'red';
+        bullets.forEach((bullet, index) => {
+            if (bullet.direction === 'up') bullet.y -= 5;
+            else if (bullet.direction === 'down') bullet.y += 5;
+            else if (bullet.direction === 'left') bullet.x -= 5;
+            else if (bullet.direction === 'right') bullet.x += 5;
+
+            const mazeX = Math.floor(bullet.x / tileSize);
+            const mazeY = Math.floor(bullet.y / tileSize);
+
+            if (
+                (maze[mazeY] && maze[mazeY][mazeX] === 0) ||
+                (mazeX === wumpus.x && mazeY === wumpus.y)
+            ) {
+                if (mazeX === wumpus.x && mazeY === wumpus.y) {
+                    console.log('Wumpus defeated!');
+                }
+                bullets.splice(index, 1);
+            } else {
+                ctx.beginPath();
+                ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.closePath();
+            }
+        });
+    }
+
+    function gameLoop() {
+        if (gameEnded) return;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        drawMaze();
+        drawHunter();
+        drawWumpus();
+        drawBullets();
+        requestAnimationFrame(gameLoop);
+    }
+
+    function updateGameState(data) {
+        maze = data.maze || maze;
+        hunter = data.hunter || hunter;
+        wumpus = data.wumpus || wumpus;
+        drawMaze();
+        drawHunter();
+        drawWumpus();
+        document.getElementById('ammoValue').textContent = hunter.ammo;
+        checkEndState();
     }
 
     function moveHunter(direction) {
@@ -109,104 +141,66 @@
         })
         .then(response => response.json())
         .then(data => {
-            hunter = data.hunter;
-            drawMaze();
-            drawHunter();
-            drawWumpus();
-            checkEndState(); // Check end state after moving hunter
+            updateGameState(data);
         })
         .catch(error => console.error('Error moving hunter:', error));
     }
 
     function shootHunter() {
-        // Add a bullet to the bullets array
+        if (hunter.ammo <= 0) {
+            console.log('No ammo left!');
+            return;
+        }
         bullets.push({
-            x: hunter.x * tileSize + tileSize / 2, // Start at hunter's position
+            x: hunter.x * tileSize + tileSize / 2,
             y: hunter.y * tileSize + tileSize / 2,
-            direction: lastDirection, // Shoot in the last direction the hunter moved
+            direction: lastDirection,
         });
 
-        // Send the shooting request to the server
         fetch('/shoot', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ direction: lastDirection }) // Use last direction
+            body: JSON.stringify({ direction: lastDirection })
         })
         .then(response => response.json())
         .then(data => {
-            console.log(data.result); // Log the result of the shot
-            hunter = data.hunter;
-            wumpus = data.wumpus;
-            drawMaze();
-            drawHunter();
-            drawWumpus();
-            checkEndState(); // Check end state after shooting
+            updateGameState(data);
         })
         .catch(error => console.error('Error handling shoot:', error));
     }
 
-    function drawBullets() {
-        ctx.fillStyle = 'red'; // Bullet color
-        bullets.forEach((bullet, index) => {
-            // Move the bullet in its direction
-            if (bullet.direction === 'up') {
-                bullet.y -= 5; // Move upward
-            } else if (bullet.direction === 'down') {
-                bullet.y += 5; // Move downward
-            } else if (bullet.direction === 'left') {
-                bullet.x -= 5; // Move left
-            } else if (bullet.direction === 'right') {
-                bullet.x += 5; // Move right
-            }
-
-            // Check if the bullet hits a wall or the Wumpus
-            const mazeX = Math.floor(bullet.x / tileSize);
-            const mazeY = Math.floor(bullet.y / tileSize);
-
-            if (
-                maze[mazeY] && maze[mazeY][mazeX] === 0 || // Hits a wall
-                (mazeX === wumpus.x && mazeY === wumpus.y) // Hits the Wumpus
-            ) {
-                if (mazeX === wumpus.x && mazeY === wumpus.y) {
-                    console.log('Wumpus defeated!');
-                }
-                bullets.splice(index, 1); // Remove bullet from array
-            } else {
-                // Draw the bullet
-                ctx.beginPath();
-                ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI * 2); // Bullet size
-                ctx.fill();
-                ctx.closePath();
-            }
-        });
+    function checkEndState() {
+        if (!wumpus.alive) {
+            showEndScreen(true);
+        } else if (hunter.dead) {
+            showEndScreen(false);
+        }
     }
 
-    // Update the game loop to include bullet rendering
-    function gameLoop() {
-        if (gameEnded) return; // Stop the game loop if the game has ended
-        ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-        drawMaze();
-        drawHunter();
-        drawWumpus();
-        drawBullets(); // Render bullets
-        requestAnimationFrame(gameLoop); // Continue the game loop
+    function handleKeyDown(event) {
+        if (gameEnded) return;
+        const key = event.key.toLowerCase();
+        let direction = null;
+        if (key === 'w') {
+            direction = 'up';
+            lastDirection = 'up';
+        } else if (key === 'a') {
+            direction = 'left';
+            lastDirection = 'left';
+        } else if (key === 's') {
+            direction = 'down';
+            lastDirection = 'down';
+        } else if (key === 'd') {
+            direction = 'right';
+            lastDirection = 'right';
+        } else if (key === ' ') {
+            shootHunter();
+            return;
+        }
+        if (direction) {
+            moveHunter(direction);
+        }
     }
-
-    let wumpusInterval = setInterval(() => {
-        fetch('/move_wumpus', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ hunterX: hunter.x, hunterY: hunter.y })
-        })
-        .then(response => response.json())
-        .then(data => {
-            hunter = data.hunter;
-            wumpus = data.wumpus;
-            checkEndState(); // Check end state after moving Wumpus
-    })
-    .catch(error => console.error('Error moving Wumpus:', error));
-}, 1000); // Move Wumpus every 2 seconds
-    
 
     function showInstructions() {
         document.getElementById('precautionScreen').style.display = 'none';
@@ -223,12 +217,45 @@
         document.getElementById('gameArea').style.display = 'block';
         document.getElementById('htmlElement').style.backgroundColor = 'black';
         document.getElementById('pageTitle').style.display = 'none';
+        startGameTimer();
 
-        startGameTimer(); // Start the game timer
-
-        drawMaze();
-        drawHunter();
-        drawWumpus();
+        // Fetch initialized game state from the backend
+        fetch('/initialize')
+            .then(response => response.json())
+            .then(data => {
+                maze = data.maze;
+                hunter = data.hunter;
+                wumpus = data.wumpus;
+                document.getElementById('ammoValue').textContent = hunter.ammo;
+                visionRadius = data.vision_radius;
+                wumpusSpeed = data.wumpus_speed;
+                wumpusAggressive = data.wumpus_aggressive;
+                multiplier = data.multiplier;
+                canvas.width = maze[0].length * tileSize;
+                canvas.height = maze.length * tileSize;
+                drawMaze();
+                drawHunter();
+                drawWumpus();
+                if (!gameLoopStarted) {
+                    document.addEventListener('keydown', handleKeyDown);
+                    gameLoopStarted = true;
+                    gameLoop();
+                }
+                if (wumpusInterval) clearInterval(wumpusInterval);
+                wumpusInterval = setInterval(() => {
+                    fetch('/move_wumpus', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ hunterX: hunter.x, hunterY: hunter.y })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        updateGameState(data);
+                    })
+                    .catch(error => console.error('Error moving Wumpus:', error));
+                }, wumpusSpeed);
+            })
+            .catch(error => console.error('Error fetching game state:', error));
     }
 
     function startGameTimer() {
@@ -237,15 +264,14 @@
 
     function endGameTimer() {
         endTime = Date.now();
-        return ((endTime - startTime) / 1000).toFixed(2); // seconds
+        return ((endTime - startTime) / 1000).toFixed(2);
     }
 
     function showEndScreen(win) {
         gameEnded = true;
-        clearInterval(wumpusInterval); // Stop the Wumpus movement interval
-        document.removeEventListener('keydown', handleKeyDown); // Stop listening for key events
-        const gameArea = document.getElementById('gameArea');
-        gameArea.style.display = 'none';
+        if (wumpusInterval) clearInterval(wumpusInterval);
+        document.removeEventListener('keydown', handleKeyDown);
+        document.getElementById('gameArea').style.display = 'none';
         const endScreen = document.createElement('div');
         endScreen.id = 'endScreen';
         endScreen.style.textAlign = 'center';
@@ -260,7 +286,6 @@
         document.body.appendChild(endScreen);
 
         if (win) {
-            // Submit score to leaderboard
             fetch('/submit_score', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -274,60 +299,16 @@
     }
 
     function goToMenu() {
-        window.location.href = '/'; // Or your difficulty selector route
+        window.location.href = '/';
     }
 
-    function checkEndState() {
-        // if (gameEnded) return;
-        if (!wumpus.alive) {
-            showEndScreen(true);
-        } else if (hunter.dead) {
-            showEndScreen(false);
-        }
-    }
-
-    function handleKeyDown(event) {
-        const key = event.key.toLowerCase(); // Normalize key to lowercase
-        let direction = null;
-
-        if (key === 'w') {
-            direction = 'up';
-            lastDirection = 'up'; // Update last direction
-        } else if (key === 'a') {
-            direction = 'left';
-            lastDirection = 'left'; // Update last direction
-        } else if (key === 's') {
-            direction = 'down';
-            lastDirection = 'down'; // Update last direction
-        } else if (key === 'd') {
-            direction = 'right';
-            lastDirection = 'right'; // Update last direction
-        } else if (key === ' ') {
-            shootHunter(); // Trigger shooting logic
-            return; // Exit early for space bar
-        }
-
-        if (direction) {
-            fetch('/move_hunter', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ direction }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                hunter = data.hunter;
-                wumpus = data.wumpus;
-                drawMaze();
-                drawHunter();
-                drawWumpus();
-                checkEndState();
-            })
-            .catch(error => console.error('Error handling movement:', error));
-        }
-    }
-    document.addEventListener('keydown', handleKeyDown);
-
-    // Start the game loop
-    gameLoop();
+    console.log("Difficulty settings:",
+        "Ammo:", hunterAmmo,
+        "Vision:", visionRadius,
+        "Wumpus Speed:", wumpusSpeed,
+        "Aggressive:", wumpusAggressive,
+        "Multiplier:", multiplier,
+        "Difficulty:", difficulty
+    );
 </script>
 {% endblock %}

@@ -4,7 +4,7 @@
     <div id="gameMenu">
         <div id="menuButtons">
             {% if session.get('username') %}
-                <a href="{{ url_for('gameplay') }}"><button id="startGameButton">Start game</button></a>
+                <a href="#"><button id="startGameButton">Start game</button></a>
                 <select name="difficulty" id="difficultySelector">
                     <option value="easy">Easy</option>
                     <option value="medium">Medium</option>
@@ -39,6 +39,21 @@
     </div>
 
     <script>
+        document.getElementById('startGameButton').addEventListener('click', function(e) {
+            e.preventDefault(); // Prevent default action
+            const selectedDifficulty = document.getElementById('difficultySelector').value;
+            console.log('Starting game with difficulty:', selectedDifficulty);
+            // Redirect to the game page
+            window.location.href = "{{ url_for('gameplay') }}";
+        });
+
+    document.getElementById('startGameButton').addEventListener('click', function(e) {
+        e.preventDefault();
+        const selectedDifficulty = document.getElementById('difficultySelector').value;
+        window.location.href = `/gameplay?difficulty=${selectedDifficulty}`;
+    });
+
+
         document.getElementById('difficultySelector').addEventListener('change', function() {
             const selectedDifficulty = this.value;
             console.log('Selected difficulty:', selectedDifficulty);

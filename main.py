@@ -207,13 +207,6 @@ def debug_session():
     else:
         return "No active session."
 
-@app.route('/Gameplay')
-def gameplay():
-    if 'user_id' not in session:
-        flash('You must be logged in to access the game.', 'warning')
-        return redirect(url_for('login'))
-    return render_template('Gameplay.html')
-
 @app.route('/generate_maze', methods=['GET'])
 def generate_maze():
     multiplier = int(request.args.get('multiplier', 1))
@@ -250,27 +243,44 @@ wumpus = Wumpus(10, 10)  # Create an instance of the Wumpus class
 
 @app.route('/initialize', methods=['GET'])
 def initialize_game():
-    global maze, hunter, wumpus
+    # Use session values or defaults
+    hunter_ammo = session.get('hunter_ammo')
+    vision_radius = session.get('vision_radius')
+    wumpus_speed = session.get('wumpus_speed')
+    wumpus_aggressive = session.get('wumpus_aggressive')
+    multiplier = session.get('multiplier')
 
-    # Generate a new maze
-    maze_obj = Maze(21, 11)
+    width = 21 * multiplier
+    height = 11 * multiplier
+
+    # Ensure odd dimensions for maze generation
+    if width % 2 == 0:
+        width += 1
+    if height % 2 == 0:
+        height += 1
+
+    maze_obj = Maze(width, height)
     maze_obj.generate_maze()
     maze = maze_obj.get_maze()
 
     # Place hunter in a valid position
-    hunter = Hunter(0, 0)
-    while maze[hunter.y][hunter.x] != 1:
-        hunter.x, hunter.y = random.randint(0, 20), random.randint(0, 10)
+    valid_cells = [(x, y) for y in range(height) for x in range(width) if maze[y][x] == 1]
+    hunter_x, hunter_y = random.choice(valid_cells)
+    hunter = Hunter(hunter_x, hunter_y, ammo=hunter_ammo)
 
-    # Place Wumpus in a valid position
-    wumpus = Wumpus(10, 10)
-    while maze[wumpus.y][wumpus.x] != 1 or (hunter.x == wumpus.x and hunter.y == wumpus.y):
-        wumpus.x, wumpus.y = random.randint(0, 20), random.randint(0, 10)
+    # Place Wumpus in a valid position, not on the hunter
+    wumpus_cells = [(x, y) for (x, y) in valid_cells if (x, y) != (hunter.x, hunter.y)]
+    wumpus_x, wumpus_y = random.choice(wumpus_cells)
+    wumpus = Wumpus(wumpus_x, wumpus_y, asleep=True)
 
     response = {
         "maze": maze,
         "hunter": {"x": hunter.x, "y": hunter.y, "ammo": hunter.ammo},
-        "wumpus": {"x": wumpus.x, "y": wumpus.y, "asleep": wumpus.asleep, "alive": wumpus.alive}
+        "wumpus": {"x": wumpus.x, "y": wumpus.y, "asleep": wumpus.asleep, "alive": wumpus.alive},
+        "vision_radius": vision_radius,
+        "wumpus_speed": wumpus_speed,
+        "wumpus_aggressive": wumpus_aggressive,
+        "multiplier": multiplier
     }
     return jsonify(response)
 
@@ -341,6 +351,43 @@ def handle_input():
         })
     else:
         return jsonify({"error": "Invalid key"})
+    
+
+@app.route('/gameplay')
+def gameplay():
+    if 'user_id' not in session:
+        flash('You must be logged in to access the game.', 'warning')
+        return redirect(url_for('login'))
+    
+    difficulty = request.args.get('difficulty', 'easy')
+    if difficulty == 'easy':
+        multiplier = 1
+        hunter_ammo = 5
+        vision_radius = 3
+        wumpus_speed = 2000
+        wumpus_aggressive = False
+    elif difficulty == 'medium':
+        multiplier = 2
+        hunter_ammo = 3
+        vision_radius = 2
+        wumpus_speed = 1500
+        wumpus_aggressive = False
+    elif difficulty == 'hard':
+        multiplier = 3
+        hunter_ammo = 1
+        vision_radius = 1
+        wumpus_speed = 1000
+        wumpus_aggressive = True
+
+    session['hunter_ammo'] = hunter_ammo
+    session['vision_radius'] = vision_radius
+    session['wumpus_speed'] = wumpus_speed
+    session['wumpus_aggressive'] = wumpus_aggressive
+    session['difficulty'] = difficulty
+    session['multiplier'] = multiplier
+
+    return render_template('Gameplay.html', hunter_ammo=hunter_ammo, vision_radius=vision_radius, wumpus_speed=wumpus_speed, wumpus_aggressive=wumpus_aggressive, difficulty=difficulty, multiplier=multiplier)
+
 
 def update_leaderboard(username, time_taken, difficulty):
     conn = sqlite3.connect('HTW-2D/database/database.db')
