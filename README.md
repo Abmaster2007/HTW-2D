@@ -6,11 +6,10 @@
 * [X] ~~*2: The menu should have a login button under that leads to the login page.*~~ [2025-05-29]
 * [X] ~~*3: The menu should have a signup button under that takes the user to the signup page.*~~ [2025-05-29]
 * [X] ~~*4: The menu should have a leaderboard on the left that displays the "user:difficulty:time" from either descending/ascending order for time and sorted by a single difficulty.*~~ [2025-06-24]
-* [ ] 5: The menu should have a background around the menu that plays the animation of the main character getting chased by the wumpus.
-* [X] ~~*6: In the bottom left of the main menu, there should be a text that says "Logged in: {user}" when logged in or signed up that should be boxed in.*~~ [2025-06-24]
-* [X] ~~*7: The menu should be centered in the middle of the screen that is enclosed in a box.*~~ [2025-05-29]
-* [X] ~~*8: The menu should have a difficulty button between the login and play button that modifies the behaviour of the enemies and the main character, ranged from Easy, Normal, and Hard.*~~ [2025-05-29]
-* [X] ~~*9: The menu should have a logout button for the user to logout of the account.*~~ [2025-06-02]
+* [X] ~~*5: In the bottom left of the main menu, there should be a text that says "Logged in: {user}" when logged in or signed up that should be boxed in.*~~ [2025-06-24]
+* [X] ~~*6: The menu should be centered in the middle of the screen that is enclosed in a box.*~~ [2025-05-29]
+* [X] ~~*7: The menu should have a difficulty button between the login and play button that modifies the behaviour of the enemies and the main character, ranged from Easy, Normal, and Hard.*~~ [2025-05-29]
+* [X] ~~*8: The menu should have a logout button for the user to logout of the account.*~~ [2025-06-02]
 
 # 1. The game
 * [X] ~~*1.1: If the user is logged in, start the game. Else, tell the player that they do not have an account signed in and lead the player to the login page.*~~ [2025-06-16]
@@ -29,31 +28,28 @@
 
 # 1.7 The main character
 * [X] ~~*1.7.1: The main character should have 'n' arrows.*~~ [2025-06-16]
-* [ ] 1.7.2: The main character should choose how many rooms for the arrow to shoot through.
-* [ ] 1.7.3: If the chosen points are connected with each other, shoot in that path. Else, shoot in a random path with the given amount of rooms.
 * [X] ~~*1.7.4: The main character should get rid of 1 arrow when used.*~~ [2025-06-24]
-* [ ] 1.7.5: The main character should be able to move in one of the 3 spaces
+* [X] ~~*1.7.5: The main character should be able to move in one of the 3 spaces*~~ [2025-06-25]
 * [X] ~~*1.7.6: If that space is valid, move to that spot. Else, tell the user that this space is not valid.*~~ [2025-06-24]
-* [ ] 1.7.7: If that space has a superbat, move the player to a random spot of the cave. Else, check the next condition
-* [ ] 1.7.8: If that space has a bottomless pit, set the game's status to False, telling the user that they falled into the pit, discarding the timer.
-* [ ] 1.7.9: If the main character has no arrows, set the game's status to False, telling 
+* [X] ~~*1.7.7: If that space has a superbat, move the player to a random spot of the cave. Else, check the next condition*~~ [2025-06-25]
+* [X] ~~*1.7.8: If that space has a bottomless pit, set the game's status to False, telling the user that they falled into the pit, discarding the timer.*~~ [2025-06-25]
 
 # 1.8 The wumpus
 * [X] ~~*1.8.1: The wumpus should be asleep as default when started.*~~ [2025-06-24]
 * [X] ~~*1.8.2: The wumpus should be able to wake up if an arrow is shot and missed as a boolean.*~~ [2025-06-24]
 * [X] ~~*1.8.3: If the wumpus is awake, start moving to the main character using an algorithm as a delay using an algorithm. Else, stay asleep in the same spot.*~~ [2025-06-24]
-* [ ] 1.8.4: If the wumpus was shot/fall into the pit, set the game's status to False, telling the user that they killed the wumpus/wumpus fell into the pit from a superbat, ending the timer and send it to the leaderboard if the player killed it.
+* [X] ~~*1.8.4: If the wumpus was shot/fall into the pit, set the game's status to False, telling the user that they killed the wumpus/wumpus fell into the pit from a superbat, ending the timer and send it to the leaderboard if the player killed it.*~~ [2025-06-25]
 
 # 1.9 Bottomless pit
-* [ ] 1.9.1: The bottomless pit should be stationary
+* [X] ~~*1.9.1: The bottomless pit should be stationary*~~ [2025-06-25]
 
 # 1.10 Super bats
-* [ ] 1.10.1: The Super bats should remain stationary.
+* [X] ~~*1.10.1: The Super bats should remain stationary.*~~ [2025-06-25]
 
 # 8 Difficulty
-* [ ] 8.1: If the difficulty is set to easy, change the main character's arrow count to 5, he can see what is in the 3 paths, the movement from the wumpus is slow, less bottomless pits and superbats.
-* [ ] 8.2: If the difficulty is set to medium, it is the standard default settings, 3 arrows, main character's vision is lacking, wumpus moving at a default rate with a chance of movingm, normal amount of bottomless pits and superbats.
-* [ ] 8.3: If the difficulty is set to hard, the main character has 1 arrow, no visual cues, wumpus is on the move in a faster rate with a guarantee chance of moving, more superbats and bottomless p
+* [X] ~~*8.1: If the difficulty is set to easy, change the main character's arrow count to 5, he can see what is in the 3 paths, the movement from the wumpus is slow, less bottomless pits and superbats.*~~ [2025-06-25]
+* [X] ~~*8.2: If the difficulty is set to medium, it is the standard default settings, 3 arrows, main character's vision is lacking, wumpus moving at a default rate with a chance of movingm, normal amount of bottomless pits and superbats.*~~ [2025-06-25]
+* [X] ~~*8.3: If the difficulty is set to hard, the main character has 1 arrow, no visual cues, wumpus is on the move in a faster rate with a guarantee chance of moving, more superbats and bottomless p*~~ [2025-06-25]
 
 # 2. Login page
 

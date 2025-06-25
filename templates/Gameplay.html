@@ -33,6 +33,28 @@
     <button id="nextButton" onclick="startGame()">Start Game</button>
 </div>
 <script defer>
+
+    const hunterSprites = {
+        up: new Image(),
+        down: new Image(),
+        left: new Image(),
+        right: new Image()
+    };
+    hunterSprites.up.src = '/static/img/hunter_up.png';
+    hunterSprites.down.src = '/static/img/hunter_down.png';
+    hunterSprites.left.src = '/static/img/hunter_left.png';
+    hunterSprites.right.src = '/static/img/hunter_right.png';
+
+    const wumpusImg = new Image();
+    wumpusImg.src = '/static/img/wumpus.png';
+
+    const batImg = new Image();
+    batImg.src = '/static/img/superbat.png';
+
+    const pitImg = new Image();
+    pitImg.src = '/static/img/pit.png';
+
+
     // Pause menu audio immediately when this script loads
     const bgAudio = document.getElementById('backgroundAudio');
     if (bgAudio) {
@@ -83,23 +105,24 @@
     }
 
     function drawHunter() {
-        ctx.fillStyle = 'blue';
-        ctx.beginPath();
-        ctx.arc(hunter.x * tileSize + tileSize / 2, hunter.y * tileSize + tileSize / 2, tileSize / 4, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.closePath();
+        let img = hunterSprites[lastDirection] || hunterSprites.down;
+        ctx.drawImage(
+            img,
+            hunter.x * tileSize, hunter.y * tileSize,
+            tileSize, tileSize
+        );
     }
 
     function drawWumpus() {
         if (!wumpus || !wumpus.alive) return;
-        const distance = Math.abs(hunter.x - wumpus.x);
-        const distanceY = Math.abs(hunter.y - wumpus.y);
-        if (distance > visionRadius || distanceY > visionRadius) return;
-        ctx.fillStyle = wumpus.asleep ? 'purple' : 'red';
-        ctx.beginPath();
-        ctx.arc(wumpus.x * tileSize + tileSize / 2, wumpus.y * tileSize + tileSize / 2, tileSize / 2, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.closePath();
+        const distance = Math.sqrt((hunter.x - wumpus.x) ** 2 + (hunter.y - wumpus.y) ** 2);
+        if (distance <= visionRadius) {
+            ctx.drawImage(
+                wumpusImg,
+                wumpus.x * tileSize, wumpus.y * tileSize,
+                tileSize, tileSize
+            );
+        }
     }
 
     function drawBullets() {
@@ -135,11 +158,11 @@
         bats.forEach(bat => {
             const distance = Math.sqrt((hunter.x - bat.x) ** 2 + (hunter.y - bat.y) ** 2);
             if (distance <= visionRadius) {
-                ctx.fillStyle = 'orange';
-                ctx.beginPath();
-                ctx.arc(bat.x * tileSize + tileSize / 2, bat.y * tileSize + tileSize / 2, tileSize / 4, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.closePath();
+                ctx.drawImage(
+                    batImg,
+                    bat.x * tileSize, bat.y * tileSize,
+                    tileSize, tileSize
+                );
             }
         });
     }
@@ -149,13 +172,11 @@
         pits.forEach(pit => {
             const distance = Math.sqrt((hunter.x - pit.x) ** 2 + (hunter.y - pit.y) ** 2);
             if (distance <= visionRadius) {
-                ctx.fillStyle = 'black';
-                ctx.beginPath();
-                ctx.arc(pit.x * tileSize + tileSize / 2, pit.y * tileSize + tileSize / 2, tileSize / 4, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.strokeStyle = 'gray';
-                ctx.stroke();
-                ctx.closePath();
+                ctx.drawImage(
+                    pitImg,
+                    pit.x * tileSize, pit.y * tileSize,
+                    tileSize, tileSize
+                );
             }
         });
     }
@@ -271,6 +292,7 @@
     }
 
     function startGame() {
+
         document.getElementById('storyScreen').style.display = 'none';
         document.getElementById('gameArea').style.display = 'block';
         document.getElementById('htmlElement').style.backgroundColor = 'black';
