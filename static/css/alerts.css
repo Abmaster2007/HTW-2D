@@ -44,3 +44,37 @@
 .alert .close:hover {
     color: black;
 }
+
+.modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(0,0,0,0.7);
+  z-index: 9998;
+}
+
+.modal-popup {
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  background: #222;
+  color: #fff;
+  padding: 30px 40px;
+  border-radius: 10px;
+  box-shadow: 0 0 30px #000;
+  z-index: 9999;
+  min-width: 300px;
+  text-align: center;
+}
+
+.modal-close {
+  position: absolute;
+  top: 10px; right: 18px;
+  font-size: 2rem;
+  color: #fff;
+  cursor: pointer;
+}
+
+.modal-message {
+  margin: 20px 0 0 0;
+  font-size: 1.1rem;
+}

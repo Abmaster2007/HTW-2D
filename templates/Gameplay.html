@@ -2,6 +2,8 @@
 
 {% block content %}
 <audio id="gameplayAudio" src="{{ url_for('static', filename='audio/8_bit_retro_forest.mp3') }}" loop autoplay></audio>
+<audio id="gameOverAudio" src="{{ url_for('static', filename='audio/game_over.mp3') }}"></audio>
+<audio id="winnerAudio" src="{{ url_for('static', filename='audio/winner.mp3') }}"></audio>
 
 <div id="gameArea" style="display: none;">
     <canvas id="gameCanvas" width="1000" height="500" style="border:1px solid #000000;"></canvas>
@@ -15,381 +17,37 @@
     </div>
 </div>
 
-<div id="precautionScreen" style="display: block;">
+
+<div class="brief_intro" id="precautionScreen" style="display: block;">
     <h1>Precaution</h1>
     <p>Ensure you are in a safe environment while playing. Avoid distractions and focus on the game.</p>
-    <button id="nextButton" onclick="showInstructions()">Next</button>
+    <button class="nextButton" id="precautionNext" autofocus onclick="showInstructions()">Next</button>
 </div>
 
-<div id="instructionsScreen" style="display: none;">
+<div class="brief_intro" id="instructionsScreen" style="display: none;">
     <h1>Instructions</h1>
     <p>Use W, A, S, D or buttons on the screen to move the hunter. Press SPACE to shoot. Avoid any entities/hazards while exploring the maze.</p>
-    <button id="nextButton" onclick="showStory()">Next</button>
+    <button class="nextButton" id="instructionsNext" onclick="showStory()">Next</button>
 </div>
 
-<div id="storyScreen" style="display: none;">
+<div class="brief_intro" id="storyScreen" style="display: none;">
     <h1>Story</h1>
     <p>You are a hunter trapped in a mysterious maze. Your goal is to find and defeat the Wumpus lurking in the shadows. Be careful, as the maze is full of dangers!</p>
-    <button id="nextButton" onclick="startGame()">Start Game</button>
+    <button class="nextButton" id="storyNext" onclick="startGame()">Start Game</button>
 </div>
-<script defer>
 
-    const hunterSprites = {
-        up: new Image(),
-        down: new Image(),
-        left: new Image(),
-        right: new Image()
-    };
-    hunterSprites.up.src = '/static/img/hunter_up.png';
-    hunterSprites.down.src = '/static/img/hunter_down.png';
-    hunterSprites.left.src = '/static/img/hunter_left.png';
-    hunterSprites.right.src = '/static/img/hunter_right.png';
-
-    const wumpusImg = new Image();
-    wumpusImg.src = '/static/img/wumpus.png';
-
-    const batImg = new Image();
-    batImg.src = '/static/img/superbat.png';
-
-    const pitImg = new Image();
-    pitImg.src = '/static/img/pit.png';
-
-
-    // Pause menu audio immediately when this script loads
-    const bgAudio = document.getElementById('backgroundAudio');
-    if (bgAudio) {
-        bgAudio.pause();
-        bgAudio.currentTime = 0;
-    }
-    // Play gameplay audio
-    const gameplayAudio = document.getElementById('gameplayAudio');
-    if (gameplayAudio) {
-        gameplayAudio.currentTime = 0;
-        gameplayAudio.play();
-    }
-
-    const canvas = document.getElementById('gameCanvas');
-    const ctx = canvas.getContext('2d');
-    const tileSize = 100;
-
-    let startTime = null;
-    let endTime = null;
-    let gameEnded = false;
-    let maze = [];
-    let hunter = {};
-    let wumpus = {};
-    let bullets = [];
-    let lastDirection = 'up';
-
-    let hunterAmmo = {{ hunter_ammo }};
-    let visionRadius = {{ vision_radius }};
-    let wumpusSpeed = {{ wumpus_speed }};
-    let wumpusAggressive = {{ wumpus_aggressive|tojson }};
-    let difficulty = "{{ difficulty }}";
-    multiplier = {{ multiplier }};
-
-    let wumpusInterval = null;
-    let gameLoopStarted = false;
-
-    let bats = [];
-    let pits = [];
-
-    function drawMaze() {
-        for (let y = 0; y < maze.length; y++) {
-            for (let x = 0; x < maze[y].length; x++) {
-                const distance = Math.sqrt((hunter.x - x) ** 2 + (hunter.y - y) ** 2);
-                ctx.fillStyle = distance <= visionRadius ? (maze[y][x] === 1 ? 'white' : 'black') : 'black';
-                ctx.fillRect(x * tileSize, y * tileSize, tileSize, tileSize);
-            }
-        }
-    }
-
-    function drawHunter() {
-        let img = hunterSprites[lastDirection] || hunterSprites.down;
-        ctx.drawImage(
-            img,
-            hunter.x * tileSize, hunter.y * tileSize,
-            tileSize, tileSize
-        );
-    }
-
-    function drawWumpus() {
-        if (!wumpus || !wumpus.alive) return;
-        const distance = Math.sqrt((hunter.x - wumpus.x) ** 2 + (hunter.y - wumpus.y) ** 2);
-        if (distance <= visionRadius) {
-            ctx.drawImage(
-                wumpusImg,
-                wumpus.x * tileSize, wumpus.y * tileSize,
-                tileSize, tileSize
-            );
-        }
-    }
-
-    function drawBullets() {
-        ctx.fillStyle = 'red';
-        bullets.forEach((bullet, index) => {
-            if (bullet.direction === 'up') bullet.y -= 5;
-            else if (bullet.direction === 'down') bullet.y += 5;
-            else if (bullet.direction === 'left') bullet.x -= 5;
-            else if (bullet.direction === 'right') bullet.x += 5;
-
-            const mazeX = Math.floor(bullet.x / tileSize);
-            const mazeY = Math.floor(bullet.y / tileSize);
-
-            if (
-                (maze[mazeY] && maze[mazeY][mazeX] === 0) ||
-                (mazeX === wumpus.x && mazeY === wumpus.y)
-            ) {
-                if (mazeX === wumpus.x && mazeY === wumpus.y) {
-                    console.log('Wumpus defeated!');
-                }
-                bullets.splice(index, 1);
-            } else {
-                ctx.beginPath();
-                ctx.arc(bullet.x, bullet.y, 5, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.closePath();
-            }
-        });
-    }
-
-    // Draw Super Bats
-    function drawBats() {
-        bats.forEach(bat => {
-            const distance = Math.sqrt((hunter.x - bat.x) ** 2 + (hunter.y - bat.y) ** 2);
-            if (distance <= visionRadius) {
-                ctx.drawImage(
-                    batImg,
-                    bat.x * tileSize, bat.y * tileSize,
-                    tileSize, tileSize
-                );
-            }
-        });
-    }
-
-    // Draw Bottomless Pits
-    function drawPits() {
-        pits.forEach(pit => {
-            const distance = Math.sqrt((hunter.x - pit.x) ** 2 + (hunter.y - pit.y) ** 2);
-            if (distance <= visionRadius) {
-                ctx.drawImage(
-                    pitImg,
-                    pit.x * tileSize, pit.y * tileSize,
-                    tileSize, tileSize
-                );
-            }
-        });
-    }
-
-    function gameLoop() {
-        if (gameEnded) return;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        drawMaze();
-        drawPits();
-        drawBats();
-        drawHunter();
-        drawWumpus();
-        drawBullets();
-        requestAnimationFrame(gameLoop);
-    }
-
-    function updateGameState(data) {
-        maze = data.maze || maze;
-        hunter = data.hunter || hunter;
-        wumpus = data.wumpus || wumpus;
-        bats = data.bats || bats;
-        pits = data.pits || pits;
-        drawMaze();
-        drawPits();
-        drawBats();
-        drawHunter();
-        drawWumpus();
-        document.getElementById('ammoValue').textContent = hunter.ammo;
-        checkEndState();
-    }
-
-    function moveHunter(direction) {
-        fetch('/move_hunter', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ direction: direction })
-        })
-        .then(response => response.json())
-        .then(data => {
-            updateGameState(data);
-        })
-        .catch(error => console.error('Error moving hunter:', error));
-    }
-
-    function shootHunter() {
-        if (hunter.ammo <= 0) {
-            console.log('No ammo left!');
-            return;
-        }
-        bullets.push({
-            x: hunter.x * tileSize + tileSize / 2,
-            y: hunter.y * tileSize + tileSize / 2,
-            direction: lastDirection,
-        });
-
-        fetch('/shoot', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ direction: lastDirection })
-        })
-        .then(response => response.json())
-        .then(data => {
-            updateGameState(data);
-        })
-        .catch(error => console.error('Error handling shoot:', error));
-    }
-
-    function checkEndState() {
-        if (!wumpus.alive) {
-            showEndScreen(true);
-        } else if (hunter.dead) {
-            if (hunter.fell) {
-                showEndScreen(false, "You fell into a bottomless pit!");
-            } else {
-                showEndScreen(false);
-            }
-        }
-    }
-
-    function handleKeyDown(event) {
-        if (gameEnded) return;
-        const key = event.key.toLowerCase();
-        let direction = null;
-        if (key === 'w') {
-            direction = 'up';
-            lastDirection = 'up';
-        } else if (key === 'a') {
-            direction = 'left';
-            lastDirection = 'left';
-        } else if (key === 's') {
-            direction = 'down';
-            lastDirection = 'down';
-        } else if (key === 'd') {
-            direction = 'right';
-            lastDirection = 'right';
-        } else if (key === ' ') {
-            shootHunter();
-            return;
-        }
-        if (direction) {
-            moveHunter(direction);
-        }
-    }
-
-    function showInstructions() {
-        document.getElementById('precautionScreen').style.display = 'none';
-        document.getElementById('instructionsScreen').style.display = 'block';
-    }
-
-    function showStory() {
-        document.getElementById('instructionsScreen').style.display = 'none';
-        document.getElementById('storyScreen').style.display = 'block';
-    }
-
-    function startGame() {
-
-        document.getElementById('storyScreen').style.display = 'none';
-        document.getElementById('gameArea').style.display = 'block';
-        document.getElementById('htmlElement').style.backgroundColor = 'black';
-        document.getElementById('pageTitle').style.display = 'none';
-        startGameTimer();
-
-        // Fetch initialized game state from the backend
-        fetch('/initialize')
-            .then(response => response.json())
-            .then(data => {
-                maze = data.maze;
-                hunter = data.hunter;
-                wumpus = data.wumpus;
-                document.getElementById('ammoValue').textContent = hunter.ammo;
-                visionRadius = data.vision_radius;
-                wumpusSpeed = data.wumpus_speed;
-                wumpusAggressive = data.wumpus_aggressive;
-                multiplier = data.multiplier;
-                canvas.width = maze[0].length * tileSize;
-                canvas.height = maze.length * tileSize;
-                drawMaze();
-                drawHunter();
-                drawWumpus();
-                if (!gameLoopStarted) {
-                    document.addEventListener('keydown', handleKeyDown);
-                    gameLoopStarted = true;
-                    gameLoop();
-                }
-                if (wumpusInterval) clearInterval(wumpusInterval);
-                wumpusInterval = setInterval(() => {
-                    fetch('/move_wumpus', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ hunterX: hunter.x, hunterY: hunter.y })
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        updateGameState(data);
-                    })
-                    .catch(error => console.error('Error moving Wumpus:', error));
-                }, wumpusSpeed);
-            })
-            .catch(error => console.error('Error fetching game state:', error));
-    }
-
-    function startGameTimer() {
-        startTime = Date.now();
-    }
-
-    function endGameTimer() {
-        endTime = Date.now();
-        return ((endTime - startTime) / 1000).toFixed(2);
-    }
-
-    function showEndScreen(win, customMessage) {
-        gameEnded = true;
-        if (wumpusInterval) clearInterval(wumpusInterval);
-        document.removeEventListener('keydown', handleKeyDown);
-        document.getElementById('gameArea').style.display = 'none';
-        const endScreen = document.createElement('div');
-        endScreen.id = 'endScreen';
-        endScreen.style.textAlign = 'center';
-        endScreen.style.marginTop = '50px';
-        const timeTaken = endGameTimer();
-        endScreen.innerHTML = `
-            <h1>${win ? "You Won!" : "Game Over"}</h1>
-            ${customMessage ? `<p>${customMessage}</p>` : ""}
-            <p>Time: <span id="finalTime">${timeTaken}</span> seconds</p>
-            <button onclick="tryAgain()">Try Again</button>
-            <button onclick="goToMenu()">Back to Difficulty Selector</button>
-        `;
-        document.body.appendChild(endScreen);
-
-        if (win) {
-            fetch('/submit_score', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ time: timeTaken, difficulty: difficulty })
-            });
-        }
-    }
-
-    function tryAgain() {
-        window.location.reload();
-    }
-
-    function goToMenu() {
-        window.location.href = '/';
-    }
-
-    console.log("Difficulty settings:",
-        "Ammo:", hunterAmmo,
-        "Vision:", visionRadius,
-        "Wumpus Speed:", wumpusSpeed,
-        "Aggressive:", wumpusAggressive,
-        "Multiplier:", multiplier,
-        "Difficulty:", difficulty
-    );
+<script>
+  // Inject variables from Flask to JavaScript
+  const gameConfig = {
+    hunterAmmo: {{ hunter_ammo }},
+    visionRadius: {{ vision_radius }},
+    wumpusSpeed: {{ wumpus_speed }},
+    wumpusAggressive: "{{ wumpus_aggressive }}",
+    difficulty: "{{ difficulty }}",
+    multiplier: {{ multiplier_ }}
+  };
+</script>
+<script src="{{ url_for('static', filename='js/gameplay.js') }}">
+    
 </script>
 {% endblock %}

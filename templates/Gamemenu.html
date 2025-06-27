@@ -8,12 +8,12 @@
                 <a href="#"><button id="startGameButton">Start game</button></a>
                 <select name="difficulty" id="difficultySelector">
                     <option value="easy">Baby</option>
-                    <option value="medium">Amature</option>
+                    <option value="medium">Amateur</option>
                     <option value="hard">Overkill</option>
                 </select>
             {% else %}
-                <button onclick="loadPage('{{ url_for('login') }}')">Login</button>
-                <button onclick="loadPage('{{ url_for('signup') }}')">Signup</button>
+                <button title="Click to Login to the game!" onclick="loadPage('{{ url_for('login') }}')">Login</button>
+                <button title="Click to Signup for the game!" onclick="loadPage('{{ url_for('signup') }}')">Signup</button>
                 <!-- <a href="{{ url_for('login') }}"><button id="loginButton">Login</button></a>
                 <a href="{{ url_for('signup') }}"><button id="signupButton">Signup</button></a> -->
             {% endif %}

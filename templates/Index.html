@@ -1,30 +1,30 @@
 <!DOCTYPE html>
 <html id="htmlElement">
 <head>
-    <link rel="stylesheet" href="{{ url_for('static', filename='index.css') }}"/>
-    <link rel="stylesheet" href="{{ url_for('static', filename='alerts.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/forms.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/menu.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/game.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/intro.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/alerts.css') }}">
+    <link rel="shortcut icon" href="../static/img/wumpus.png">
     <meta charset="UTF-8" />
     <title>Hunt the wumpus 2D</title>
 </head>
 
 <body>
-  {% with messages = get_flashed_messages(with_categories=true) %}
-          {% if messages %}
-              {% for category, message in messages %}
-                  <div class="alert alert-{{ category }}">
-                      <span class="close" onclick="this.parentElement.style.display='none';">&times;</span>
-                      {{ message }}
-                  </div>
-              {% endfor %}
-          {% endif %}
-      {% endwith %}
     <audio id="backgroundAudio" autoplay loop>
         <source src="{{ url_for('static', filename='audio/8_bit_menu.mp3') }}" type="audio/mpeg">
     </audio>
-    <h1 id="pageTitle" onclick="loadPage('{{ url_for('index') }}')">Hunt the Wumpus</h1>
+    <div class="title-container">
+        <h1 id="pageTitle" onclick="loadPage('{{ url_for('index') }}')">Hunt the Wumpus</h1>
+    </div>
 
-    <!-- ⬇️ This content will be dynamically updated -->
-    <div id="contentArea">{% block content %}{% endblock %}</div>
+    <!-- This content will be dynamically updated -->
+    <div id="contentArea">
+        {% block content %}{% endblock %}
+    </div>
     <script>
         function loadPage(path) {
             fetch(path)
@@ -44,5 +44,27 @@
 }
 
     </script>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div id="alertModalOverlay" class="modal-overlay" onclick="closeAlertModal()"></div>
+        <div id="alertModal" class="modal-popup">
+          <span class="modal-close" onclick="closeAlertModal()">&times;</span>
+          {% for category, message in messages %}
+            <div class="modal-message alert-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+        <script>
+          function closeAlertModal() {
+            document.getElementById('alertModal').style.display = 'none';
+            document.getElementById('alertModalOverlay').style.display = 'none';
+          }
+          // Optional: Close with ESC key
+          document.addEventListener('keydown', function(e) {
+            if (e.key === "Escape") closeAlertModal();
+          });
+        </script>
+      {% endif %}
+    {% endwith %}
 </body>
 </html>
