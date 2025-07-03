@@ -1,3 +1,9 @@
+"""
+routes.py
+
+Defines the Flask routes for the Hunt the Wumpus web application, including game initialization, player actions, and leaderboard.
+"""
+
 import sqlite3
 import random
 from flask import Flask, render_template, url_for, redirect, request, session, flash, jsonify
@@ -5,9 +11,15 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from .models import Maze, Hunter, Wumpus, SuperBat, BottomlessPit
 
 def create_routes(app):
+    """
+    Registers all routes to the Flask app.
+    """
 
     @app.route('/')
     def index():
+        """
+        Renders the game menu and leaderboard.
+        """
         conn = sqlite3.connect('HTW-2D/database/database.db')
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -18,10 +30,16 @@ def create_routes(app):
 
     @app.route('/login', methods=['GET', 'POST'])
     def login():
+        """
+        Renders the login page.
+        """
         return render_template('Login.html')
 
     @app.route('/login_submit', methods=['GET', 'POST'])
     def login_submit():
+        """
+        Handles the login form submission.
+        """
         if request.method == 'POST':
             username = request.form['username']
             password = request.form['password']
@@ -46,10 +64,16 @@ def create_routes(app):
 
     @app.route('/signup')
     def signup():
+        """
+        Renders the signup page.
+        """
         return render_template('Signup.html')
 
     @app.route('/signup_submit', methods=['GET', 'POST'])
     def signup_submit():
+        """
+        Handles the signup form submission.
+        """
         if request.method == 'POST':
             username = request.form['username']
             password = request.form['password']
@@ -80,12 +104,18 @@ def create_routes(app):
 
     @app.route('/logout')
     def logout():
+        """
+        Logs out the current user and redirects to the index page.
+        """
         session.clear()
         flash('You have been logged out.', 'info')
         return redirect(url_for('index'))
 
     @app.route('/debug_session')
     def debug_session():
+        """
+        Displays the current session information for debugging.
+        """
         if 'user_id' in session:
             conn = sqlite3.connect('HTW-2D/database/database.db')
             conn.row_factory = sqlite3.Row
@@ -103,6 +133,9 @@ def create_routes(app):
 
     @app.route('/generate_maze', methods=['GET'])
     def generate_maze():
+        """
+        Generates a new maze based on the selected difficulty multiplier.
+        """
         multiplier = int(request.args.get('multiplier', 1))
         base_width, base_height = 21, 11
         width = base_width * multiplier
@@ -131,6 +164,9 @@ def create_routes(app):
 
     @app.route('/initialize', methods=['GET'])
     def initialize_game():
+        """
+        Initializes the game state, placing the hunter, Wumpus, bats, and pits in the maze.
+        """
         global maze, hunter, wumpus, superbats, pits
 
         # Use session values or defaults
@@ -186,6 +222,9 @@ def create_routes(app):
 
     @app.route('/move_hunter', methods=['POST'])
     def move_hunter():
+        """
+        Moves the hunter in the specified direction and checks for collisions with Wumpus, bats, and pits.
+        """
         direction = request.json.get('direction')
         hunter.move(direction, maze)
         # Check for bottomless pit
@@ -212,6 +251,9 @@ def create_routes(app):
 
     @app.route('/shoot', methods=['POST'])
     def shoot():
+        """
+        Shoots an arrow in the specified direction. If the arrow hits the Wumpus, it will be killed.
+        """
         direction = request.json.get('direction')  # Get shooting direction from the client
         result = hunter.shoot(direction, maze, wumpus)
         # wake up the Wumpus if it was asleep
@@ -226,6 +268,9 @@ def create_routes(app):
 
     @app.route('/move_wumpus', methods=['POST'])
     def move_wumpus():
+        """
+        Moves the Wumpus towards the hunter if awake and alive. Can be moved by bats.
+        """
         if not wumpus.asleep and wumpus.alive:
             wumpus.move(hunter, maze)
             # Check for superbat (wumpus can be moved by bats)
@@ -243,6 +288,9 @@ def create_routes(app):
 
     @app.route('/handle_input', methods=['POST'])
     def handle_input():
+        """
+        Handles raw input from the client (WASD keys for movement, space for shooting).
+        """
         key = request.json.get('key').lower()  # Get the key from the client request
         direction = None
 
@@ -278,6 +326,9 @@ def create_routes(app):
 
     @app.route('/gameplay')
     def gameplay():
+        """
+        Renders the gameplay page and initializes game settings based on difficulty.
+        """
         if 'user_id' not in session:
             flash('You must be logged in to access the game.', 'warning')
             return redirect(url_for('login'))
@@ -329,6 +380,9 @@ def create_routes(app):
 
 
     def update_leaderboard(username, time_taken, difficulty):
+        """
+        Updates the leaderboard with the given user's time if it is a new record.
+        """
         conn = sqlite3.connect('HTW-2D/database/database.db')
         cursor = conn.cursor()
         # Check if a better time exists
@@ -344,6 +398,9 @@ def create_routes(app):
 
     @app.route('/submit_score', methods=['POST'])
     def submit_score():
+        """
+        Submits the game score (time taken) for the logged-in user.
+        """
         data = request.json
         username = session.get('username', 'Anonymous')
         time_taken = float(data.get('time'))
@@ -353,6 +410,9 @@ def create_routes(app):
 
     @app.route('/leaderboard')
     def leaderboard():
+        """
+        Renders the leaderboard page with the top scores.
+        """
         conn = sqlite3.connect('HTW-2D/database/database.db')
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()

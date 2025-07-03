@@ -1,3 +1,11 @@
+/**
+ * Gameplay script for the Wumpus Hunt game.
+ * This script handles the game logic, rendering, and user interactions.
+ * It initializes the game, manages the hunter's movements, handles shooting,
+ * and updates the game state based on interactions with the Wumpus, bats, and pits.
+ * It also manages the game loop and end conditions.
+ */
+
 const hunterSprites = {
     up: new Image(),
     down: new Image(),
@@ -372,6 +380,16 @@ function showEndScreen(win, customMessage) {
     document.body.appendChild(endScreen);
 
     document.getElementById('gameplayAudio').pause();
+
+    if (document.fullscreenElement) {
+        document.exitFullscreen();
+    } else if (document.mozFullScreenElement) { // Firefox
+        document.mozCancelFullScreen();
+    } else if (document.webkitFullscreenElement) { // Chrome, Safari and Opera
+        document.webkitExitFullscreen();
+    } else if (document.msFullscreenElement) { // IE/Edge
+        document.msExitFullscreen();
+    }
 
     if (win) {
         document.getElementById('winnerAudio').currentTime = 0;
