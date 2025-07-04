@@ -1,69 +1,82 @@
-# HTW 2D
+# Hunt the Wumpus 2D
 
-# Main menu
+A modern web-based reimagining of the classic "Hunt the Wumpus" game. This 2D version features a procedurally generated maze, multiple hazards, difficulty settings, and user account support with a global leaderboard.
 
-* [X] ~~*1: The menu should have a play button that lets the player start the game if they have an account.*~~ [2025-05-29] 
-* [X] ~~*2: The menu should have a login button under that leads to the login page.*~~ [2025-05-29]
-* [X] ~~*3: The menu should have a signup button under that takes the user to the signup page.*~~ [2025-05-29]
-* [X] ~~*4: The menu should have a leaderboard on the left that displays the "user:difficulty:time" from either descending/ascending order for time and sorted by a single difficulty.*~~ [2025-06-24]
-* [X] ~~*5: In the bottom left of the main menu, there should be a text that says "Logged in: {user}" when logged in or signed up that should be boxed in.*~~ [2025-06-24]
-* [X] ~~*6: The menu should be centered in the middle of the screen that is enclosed in a box.*~~ [2025-05-29]
-* [X] ~~*7: The menu should have a difficulty button between the login and play button that modifies the behaviour of the enemies and the main character, ranged from Easy, Normal, and Hard.*~~ [2025-05-29]
-* [X] ~~*8: The menu should have a logout button for the user to logout of the account.*~~ [2025-06-02]
+---
 
-# 1. The game
-* [X] ~~*1.1: If the user is logged in, start the game. Else, tell the player that they do not have an account signed in and lead the player to the login page.*~~ [2025-06-16]
-* [X] ~~*1.2: The game should be displayed in a rectangle box in the center of the screen.*~~ [2025-06-16]
-* [X] ~~*1.3: The game should display the cautions such as being a scary game and loud noises and has a button to continue to the next screen*~~ [2026-06-16]
-* [X] ~~*1.4: The game should then display the controls of the game such as movement, actions, and rules and has a button to continue to the next screen*~~ [2025-06-16]
-* [X] ~~*1.5: The game should then display the story of the game and has a button to continue to the next screen.*~~ [2025-06-16]
-* [ ] 1.6: The game should generate the cave in the shape of a dodecahedron.
-* [X] ~~*1.7: The game should put the main character in a random area that does not occupy the same spot as the wumpus.*~~ [2025-06-16]
-* [X] ~~*1.8: The game should put the wumpus in a random area that does not occupy the same spot as the main character.*~~ [2025-06-24]
-* [ ] 1.9: The game should put 'n' amount of bottomless pits in random areas that does not occupy both the main character and the wumpus.
-* [ ] 1.10: The game should put 'n' amount of superbats in random areas that does not occupy the main character, wumpus, and bottomless pits.
-* [X] ~~*1.10: The game should limit the main character's vision to 3 viewable paths that shows the user where can they go.*~~ [2025-06-24]
-* [ ] 1.11: The game should give the user options on what he can do such as "Move" and "Shoot" and give cues on whether the wumpus, bottomless pit or superbat is nearby.
-* [X] ~~*1.12: When the game is started, set the game's status to True and start the timer.*~~ [2025-06-24]
+## 🎮 Features
 
-# 1.7 The main character
-* [X] ~~*1.7.1: The main character should have 'n' arrows.*~~ [2025-06-16]
-* [X] ~~*1.7.4: The main character should get rid of 1 arrow when used.*~~ [2025-06-24]
-* [X] ~~*1.7.5: The main character should be able to move in one of the 3 spaces*~~ [2025-06-25]
-* [X] ~~*1.7.6: If that space is valid, move to that spot. Else, tell the user that this space is not valid.*~~ [2025-06-24]
-* [X] ~~*1.7.7: If that space has a superbat, move the player to a random spot of the cave. Else, check the next condition*~~ [2025-06-25]
-* [X] ~~*1.7.8: If that space has a bottomless pit, set the game's status to False, telling the user that they falled into the pit, discarding the timer.*~~ [2025-06-25]
+### 🧭 Main Menu
+- **Play** – Start the game (requires login)
+- **Login / Signup** – Manage user authentication
+- **Leaderboard** – View top scores by user, difficulty, and time
+- **Difficulty Selection** – Choose between Easy, Normal, and Hard
+- **Logout** – Securely end your session
+- **User Status** – Displays “Logged in: {user}” in the UI
+- **Responsive UI** – Centered, boxed layout for clean presentation
 
-# 1.8 The wumpus
-* [X] ~~*1.8.1: The wumpus should be asleep as default when started.*~~ [2025-06-24]
-* [X] ~~*1.8.2: The wumpus should be able to wake up if an arrow is shot and missed as a boolean.*~~ [2025-06-24]
-* [X] ~~*1.8.3: If the wumpus is awake, start moving to the main character using an algorithm as a delay using an algorithm. Else, stay asleep in the same spot.*~~ [2025-06-24]
-* [X] ~~*1.8.4: If the wumpus was shot/fall into the pit, set the game's status to False, telling the user that they killed the wumpus/wumpus fell into the pit from a superbat, ending the timer and send it to the leaderboard if the player killed it.*~~ [2025-06-25]
+### 🕹️ Gameplay
+- **Authentication Required** – Only logged-in users can play
+- **Central Game Display** – Game is rendered in a centered rectangle
+- **Onboarding Flow** – Includes caution, controls, and story screens
+- **Randomized Setup** – Hunter and Wumpus spawn in non-overlapping locations
+- **Hazards** – Randomly placed bottomless pits and stationary superbats
+- **Limited Vision** – Hunter sees only 3 adjacent paths
+- **Player Actions** – Choose to move or shoot, with hazard proximity cues
+- **Timer** – Starts when the game begins, used for leaderboard scoring
 
-# 1.9 Bottomless pit
-* [X] ~~*1.9.1: The bottomless pit should be stationary*~~ [2025-06-25]
+### 🧍 Main Character (Hunter)
+- **Arrows** – Starts with a variable number based on difficulty
+- **Movement** – Can move to valid adjacent rooms
+- **Encounters** – Superbat teleports, pitfall ends game
+- **Resource Management** – Arrows are consumed when shooting
 
-# 1.10 Super bats
-* [X] ~~*1.10.1: The Super bats should remain stationary.*~~ [2025-06-25]
+### 🐉 Wumpus
+- **Behavior** – Starts asleep; wakes if an arrow is missed
+- **AI Movement** – Pursues the hunter using pathfinding when awake
+- **Defeat Conditions** – Can be killed by an arrow or fall into a pit
 
-# 8 Difficulty
-* [X] ~~*8.1: If the difficulty is set to easy, change the main character's arrow count to 5, he can see what is in the 3 paths, the movement from the wumpus is slow, less bottomless pits and superbats.*~~ [2025-06-25]
-* [X] ~~*8.2: If the difficulty is set to medium, it is the standard default settings, 3 arrows, main character's vision is lacking, wumpus moving at a default rate with a chance of movingm, normal amount of bottomless pits and superbats.*~~ [2025-06-25]
-* [X] ~~*8.3: If the difficulty is set to hard, the main character has 1 arrow, no visual cues, wumpus is on the move in a faster rate with a guarantee chance of moving, more superbats and bottomless p*~~ [2025-06-25]
+### ⚠️ Hazards
+- **Bottomless Pits** – Stationary; falling in ends the game
+- **Superbats** – Stationary; teleport the hunter to a random location
 
-# 2. Login page
+### 🎚️ Difficulty Settings
+- **Easy** – 5 arrows, full vision, slow Wumpus, fewer hazards
+- **Normal** – 3 arrows, limited vision, standard Wumpus behavior
+- **Hard** – 1 arrow, no visual cues, fast Wumpus, more hazards
 
-* [X] ~~*2.1: There should be an input field "Username" for username in str form.*~~ [2025-06-02]
-* [X] ~~*2.2: There should be an input field "Password" for password in str form.*~~ [2025-06-02]
-* [X] ~~*2.3: There should be a button "Login" that confirms the form for username and password.*~~ [2025-06-02] 
-* [X] ~~*2.4: If user exist, go back to the main menu with the text "logged in: {user}" added to the main menu. If not, alert the user that the username or password doesn't exist.*~~ [2025-06-07]
-* [X] ~~*2.5: The form should be closed in a box that is in the left side of the screen.*~~ [2025-06-07]
-* [X] ~~*2.6: There should be text "Don't have an account?" above the button "Signup" at the bottom left of the form that takes the user to the signup page.*~~ [2025-06-04]
+### 🔐 Authentication
+- **Login** – Username and password required
+- **Signup** – Create a new account with unique credentials
+- **Validation** – Clear feedback for invalid or duplicate entries
+- **UI Design** – Forms are boxed and styled for clarity
 
-# 3. Signup page
-* [X] ~~*3.1: There should be an input field for username in str form.*~~ [2025-06-04]
-* [X] ~~*3.2: There should be an input field for password in str form.*~~ [2025-06-04]
-* [X] ~~*3.3: There should be a button "Signup" that checks the credentials if the user exists or not.*~~ [2025-06-04]
-* [X] ~~*3.4: If the username exists in the database, alert the user that this username already exists and take them back to the signup page. Else, Take them back to the main menu with the text "Logged in: {user}" added to the main menu.*~~ [2025-06-07]
-* [X] ~~*3.5: The form should be closed in a box that is in the left side of the screen.*~~ [2025-06-04]
-* [X] ~~*3.6: There should be text "You have an account?" above the button "Login" at the bottom left of the form that takes the user to the login page.*~~ [2025-06-04]
+---
+
+## ✅ Requirements Checklist
+
+- [x] Main menu with play, login, signup, leaderboard, difficulty, logout, and user status
+- [x] Game access restricted to authenticated users
+- [x] Centralized, boxed game display
+- [x] Onboarding screens: caution, controls, and story
+- [x] Randomized placement of hunter and Wumpus
+- [x] Stationary bottomless pits and superbats
+- [x] Limited vision for hunter
+- [x] Move and shoot actions with hazard cues
+- [x] Game timer for leaderboard scoring
+- [x] Arrow inventory and consumption logic
+- [x] Validated movement with feedback
+- [x] Superbat and pit interactions
+- [x] Wumpus AI: sleep, wake, pursue, and defeat logic
+- [x] Difficulty settings affect gameplay variables
+- [x] Login and signup with validation and feedback
+- [x] Styled and responsive UI for all forms and menus
+
+---
+
+## 🚀 Installation & Running
+
+1. **Clone the repository**
+   ```bash
+   git clone https://github.com/your-username/htw-2d.git
+   cd htw-2d
